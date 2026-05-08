@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PrecifAI — Matriz de Precificação de Projetos de IA · Hcode</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f172a;
+      --bg2: #1e293b;
+      --bg3: #273349;
+      --border: #334155;
+      --border2: #475569;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --dim: #64748b;
+      --primary: #6366f1;
+      --primary-l: #818cf8;
+      --green: #10b981;
+      --green-l: #34d399;
+      --amber: #f59e0b;
+      --amber-l: #fbbf24;
+      --rose: #f43f5e;
+      --rose-l: #fb7185;
+      --cyan: #06b6d4;
+      --cyan-l: #67e8f9;
+      --violet: #a855f7;
+      --violet-l: #c084fc;
+      --sky: #0ea5e9;
+      --sky-l: #7dd3fc;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #1e1b4b 0%, #1e293b 60%, #0c1a2e 100%);
+      border-bottom: 1px solid #312e81;
+      padding: 1.5rem 2rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--primary), var(--violet));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .brand-name {
+      font-size: 1.35rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #e0e7ff, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+    }
+    .brand-sub {
+      font-size: 0.72rem;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .header-badge {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .badge {
+      background: rgba(99,102,241,0.15);
+      border: 1px solid rgba(99,102,241,0.3);
+      color: var(--primary-l);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+    }
+
+    /* ── Progress ── */
+    .progress-wrap {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+    }
+    .progress-steps {
+      display: flex;
+      align-items: center;
+      max-width: 760px;
+      margin: 0 auto;
+      gap: 0;
+    }
+    .progress-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      flex: 1;
+      position: relative;
+    }
+    .progress-step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      width: 100%;
+      height: 2px;
+      background: var(--border);
+      z-index: 0;
+    }
+    .progress-step.done:not(:last-child)::after,
+    .progress-step.active:not(:last-child)::after {
+      background: linear-gradient(90deg, var(--primary), var(--border));
+    }
+    .progress-step.done:not(:last-child)::after { background: var(--primary); }
+    .step-bubble {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--bg3);
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--dim);
+      z-index: 1;
+      transition: all .3s;
+    }
+    .progress-step.active .step-bubble {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.2);
+    }
+    .progress-step.done .step-bubble {
+      background: var(--green);
+      border-color: var(--green);
+      color: white;
+    }
+    .step-label {
+      font-size: 0.65rem;
+      color: var(--dim);
+      text-align: center;
+      white-space: nowrap;
+    }
+    .progress-step.active .step-label { color: var(--primary-l); font-weight: 600; }
+    .progress-step.done .step-label  { color: var(--green-l); }
+
+    /* ── Main container ── */
+    .main { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+    /* ── Step panel ── */
+    .step-panel { display: none; animation: fadeIn .3s ease; }
+    .step-panel.active { display: block; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    .step-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+      letter-spacing: -0.02em;
+    }
+    .step-desc { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.75rem; }
+
+    /* ── Field group ── */
+    .field-group { margin-bottom: 1.5rem; }
+    .field-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 0.65rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .field-label .info-tip {
+      font-size: 0.65rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--dim);
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    /* ── Option cards grid ── */
+    .cards-grid {
+      display: grid;
+      gap: 0.6rem;
+    }
+    .cards-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .cards-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .cards-grid.cols-4 { grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); }
+    .cards-grid.cols-5 { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); }
+
+    .opt-card {
+      background: var(--bg2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.85rem 1rem;
+      cursor: pointer;
+      transition: all .18s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      position: relative;
+      user-select: none;
+    }
+    .opt-card:hover { background: var(--bg3); border-color: var(--border2); }
+    .opt-card.selected {
+      border-color: var(--primary);
+      background: rgba(99,102,241,0.08);
+    }
+    .opt-card.selected::before {
+      content: '✓';
+      position: absolute;
+      top: 0.5rem; right: 0.6rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--primary-l);
+      background: rgba(99,102,241,0.2);
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 18px;
+      text-align: center;
+    }
+    .opt-icon { font-size: 1.4rem; margin-bottom: 0.1rem; }
+    .opt-title { font-size: 0.83rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+    .opt-sub { font-size: 0.7rem; color: var(--dim); line-height: 1.3; }
+    .opt-badge {
+      display: inline-block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.1rem 0.4rem;
+      border-radius: 999px;
+      margin-top: 0.25rem;
+      width: fit-content;
+    }
+    .badge-green  { background: rgba(16,185,129,0.15); color: var(--green-l); border: 1px solid rgba(16,185,129,0.3); }
+    .badge-amber  { background: rgba(245,158,11,0.15); color: var(--amber-l); border: 1px solid rgba(245,158,11,0.3); }
+    .badge-rose   { background: rgba(244,63,94,0.15);  color: var(--rose-l);  border: 1px solid rgba(244,63,94,0.3); }
+    .badge-cyan   { background: rgba(6,182,212,0.15);  color: var(--cyan-l);  border: 1px solid rgba(6,182,212,0.3); }
+    .badge-violet { background: rgba(168,85,247,0.15); color: var(--violet-l);border: 1px solid rgba(168,85,247,0.3); }
+    .badge-sky    { background: rgba(14,165,233,0.15); color: var(--sky-l);   border: 1px solid rgba(14,165,233,0.3); }
+    .badge-primary{ background: rgba(99,102,241,0.15); color: var(--primary-l);border: 1px solid rgba(99,102,241,0.3); }
+
+    /* ── Range slider ── */
+    .range-wrap { display: flex; align-items: center; gap: 1rem; }
+    .range-wrap input[type=range] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      outline: none;
+    }
+    .range-wrap input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+    }
+    .range-val {
+      min-width: 2.5rem;
+      text-align: right;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary-l);
+    }
+
+    /* ── Navigation buttons ── */
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 0.65rem 1.4rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all .18s;
+    }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .btn-ghost:hover { background: var(--bg2); border-color: var(--border2); color: var(--text); }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-success {
+      background: var(--green);
+      color: white;
+    }
+    .btn-success:hover { background: #059669; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Divider ── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+    /* ═══════════════════════════ RESULTS ═══════════════════════════ */
+
+    .results-header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .results-badge {
+      display: inline-block;
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.3);
+      color: var(--green-l);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.85rem;
+      border-radius: 999px;
+      margin-bottom: 0.75rem;
+    }
+    .price-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin: 0.5rem 0 0.3rem;
+    }
+    .price-min, .price-max {
+      font-size: clamp(2rem, 6vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .price-min { color: var(--green-l); }
+    .price-max { color: var(--amber-l); }
+    .price-sep { font-size: 1.5rem; color: var(--dim); margin: 0 0.25rem; }
+    .price-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+    }
+    .multiplier-badge-big {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.3);
+      color: var(--amber-l);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      margin-top: 0.5rem;
+    }
+
+    /* ── Results grid ── */
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .res-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+    }
+    .res-card.full { grid-column: 1 / -1; }
+    .res-card-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--dim);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    /* ── Timeline ── */
+    .timeline-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.82rem;
+    }
+    .timeline-row:last-child { border-bottom: none; }
+    .timeline-label { color: var(--muted); }
+    .timeline-value { font-weight: 600; color: var(--text); }
+
+    /* ── Team chips ── */
+    .team-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .team-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* ── Multiplier breakdown ── */
+    .mult-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.4rem 0;
+      font-size: 0.8rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .mult-row:last-child { border-bottom: none; }
+    .mult-name { color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
+    .mult-val {
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .mult-bar-wrap { flex: 1; margin: 0 0.75rem; background: var(--bg3); border-radius: 2px; height: 4px; }
+    .mult-bar { height: 4px; border-radius: 2px; background: var(--primary); transition: width .5s ease; }
+
+    /* ── Risk alerts ── */
+    .alert {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 0.6rem;
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+    .alert-icon { font-size: 1rem; flex-shrink: 0; }
+    .alert-body { }
+    .alert-title { font-weight: 700; margin-bottom: 0.15rem; }
+    .alert-rose  { background: rgba(244,63,94,0.1);  border: 1px solid rgba(244,63,94,0.25);  color: var(--rose-l); }
+    .alert-amber { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); color: var(--amber-l); }
+    .alert-green { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25); color: var(--green-l); }
+    .alert-blue  { background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.25); color: var(--sky-l); }
+
+    /* ── Chart container ── */
+    .chart-wrap { position: relative; height: 260px; }
+
+    /* ── Print ── */
+    .print-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .btn-outline:hover { background: var(--bg2); }
+
+    .phase-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 0.9rem;
+      background: rgba(99,102,241,0.08);
+      border: 1px solid rgba(99,102,241,0.2);
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      font-size: 0.8rem;
+      color: var(--primary-l);
+    }
+
+    @media (max-width: 640px) {
+      .cards-grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
+      .cards-grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
+      .cards-grid.cols-5 { grid-template-columns: repeat(2, 1fr); }
+      .results-grid      { grid-template-columns: 1fr; }
+      .res-card.full     { grid-column: 1; }
+      .header { flex-direction: column; align-items: flex-start; }
+      .header-badge { margin-left: 0; }
+    }
+
+    @media print {
+      .nav-bar, .print-bar, .header-badge, .progress-wrap { display: none; }
+      body { background: white; color: #1e293b; }
+      .res-card { border: 1px solid #cbd5e1; background: white; }
+      .step-panel { display: block !important; }
+      .step-panel:not(.active) { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════ HEADER ══════════════════════ -->
+<header class="header">
+  <div class="brand">
+    <div class="brand-icon">💡</div>
+    <div>
+      <div class="brand-name">PrecifAI</div>
+      <div class="brand-sub">Matriz de Precificação de Projetos de IA · Hcode</div>
+    </div>
+  </div>
+  <div class="header-badge">
+    <span class="badge">v2.0</span>
+    <span class="badge" style="background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.3);color:var(--green-l)">Beta</span>
+  </div>
+</header>
+
+<!-- ══════════════════════ PROGRESS ══════════════════════ -->
+<div class="progress-wrap">
+  <div class="progress-steps" id="progressSteps">
+    <div class="progress-step active" data-step="1">
+      <div class="step-bubble">1</div>
+      <div class="step-label">Cliente</div>
+    </div>
+    <div class="progress-step" data-step="2">
+      <div class="step-bubble">2</div>
+      <div class="step-label">Solução</div>
+    </div>
+    <div class="progress-step" data-step="3">
+      <div class="step-bubble">3</div>
+      <div class="step-label">Técnico</div>
+    </div>
+    <div class="progress-step" data-step="4">
+      <div class="step-bubble">4</div>
+      <div class="step-label">Entregáveis</div>
+    </div>
+    <div class="progress-step" data-step="5">
+      <div class="step-bubble">💰</div>
+      <div class="step-label">Resultado</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ STEPS ══════════════════════ -->
+<main class="main">
+
+  <!-- ▸ STEP 1: Contexto do Cliente -->
+  <div class="step-panel active" id="step-1">
+    <div class="step-title">Contexto do Cliente</div>
+    <div class="step-desc">Entenda o perfil do cliente para calibrar os multiplicadores de complexidade e risco.</div>
+
+    <div class="field-group">
+      <div class="field-label">Porte da empresa</div>
+      <div class="cards-grid cols-4">
+        <div class="opt-card selected" data-field="companySize" data-value="startup">
+          <div class="opt-icon">🌱</div>
+          <div class="opt-title">Startup</div>
+          <div class="opt-sub">Até 50 pessoas</div>
+          <span class="opt-badge badge-green">−20%</span>
+        </div>
+        <div class="opt-card" data-field="companySize" data-value="pme">
+          <div class="opt-icon">🏢</div>
+          <div class="opt-title">PME</div>
+          <div class="opt-sub">50–500 pessoas</div>
+          <span class="opt-badge badge-cyan">base</span>
+        </div>
+        <div class="opt-card" data-field="companySize" data-value="enterprise">
+          <div class="opt-icon">🏙️</div>
+          <div class="opt-title">Enterprise</div>
+          <div class="opt-sub">500–5k pessoas</div>
+          <span class="opt-badge badge-amber">+20%</span>
+        </div>
+        <div class="opt-card" data-field="companySize" data-value="multinacional">
+          <div class="opt-icon">🌐</div>
+          <div class="opt-title">Multinacional</div>
+          <div class="opt-sub">5k+ pessoas</div>
+          <span class="opt-badge badge-rose">+40%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Setor / Indústria</div>
+      <div class="cards-grid cols-5">
+        <div class="opt-card selected" data-field="sector" data-value="tech">
+          <div class="opt-icon">💻</div>
+          <div class="opt-title">Tech / SaaS</div>
+        </div>
+        <div class="opt-card" data-field="sector" data-value="financeiro">
+          <div class="opt-icon">🏦</div>
+          <div class="opt-title">Financeiro</div>
+        </div>
+        <div class="opt-card" data-field="sector" data-value="saude">
+          <div class="opt-icon">🏥</div>
+          <div class="opt-title">Saúde</div>
+        </div>
+        <div class="opt-card" data-field="sector" data-value="varejo">
+          <div class="opt-icon">🛒</div>
+          <div class="opt-title">Varejo</div>
+        </div>
+        <div class="opt-card" data-field="sector" data-value="industria">
+          <div class="opt-icon">🏭</div>
+          <div class="opt-title">Indústria</div>
+        </div>
+        <div class="opt-card" data-field="sector" data-value="juridico">
+          <div class="opt-icon">⚖️</div>
+          <div class="opt-title">Jurídico</div>
+        </div>
+        <div class="opt-card" data-field="sector" data-value="educacao">
+          <div class="opt-icon">🎓</div>
+          <div class="opt-title">Educação</div>
+        </div>
+        <div class="opt-card" data-field="sector" data-value="logistica">
+          <div class="opt-icon">🚚</div>
+          <div class="opt-title">Logística</div>
+        </div>
+        <div class="opt-card" data-field="sector" data-value="governo">
+          <div class="opt-icon">🏛️</div>
+          <div class="opt-title">Gov / Público</div>
+        </div>
+        <div class="opt-card" data-field="sector" data-value="outro">
+          <div class="opt-icon">📦</div>
+          <div class="opt-title">Outro</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Regulação e Compliance <span class="info-tip">LGPD · BACEN · ANS · PCI · ISO 42001</span></div>
+      <div class="cards-grid cols-4">
+        <div class="opt-card selected" data-field="regulation" data-value="none">
+          <div class="opt-icon">🟢</div>
+          <div class="opt-title">Sem regulação</div>
+          <div class="opt-sub">Sem requisitos formais</div>
+          <span class="opt-badge badge-green">1.0×</span>
+        </div>
+        <div class="opt-card" data-field="regulation" data-value="basic">
+          <div class="opt-icon">🟡</div>
+          <div class="opt-title">Regulação básica</div>
+          <div class="opt-sub">LGPD, termos básicos</div>
+          <span class="opt-badge badge-amber">1.2×</span>
+        </div>
+        <div class="opt-card" data-field="regulation" data-value="high">
+          <div class="opt-icon">🟠</div>
+          <div class="opt-title">Alta regulação</div>
+          <div class="opt-sub">BACEN, ANS, PCI-DSS</div>
+          <span class="opt-badge badge-rose">1.5×</span>
+        </div>
+        <div class="opt-card" data-field="regulation" data-value="max">
+          <div class="opt-icon">🔴</div>
+          <div class="opt-title">Regulação máxima</div>
+          <div class="opt-sub">BACEN + ISO 42001 + auditoria</div>
+          <span class="opt-badge badge-rose">2.0×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Governança de IA</div>
+      <div class="cards-grid cols-3">
+        <div class="opt-card selected" data-field="governance" data-value="none">
+          <div class="opt-icon">🏗️</div>
+          <div class="opt-title">Sem governance</div>
+          <div class="opt-sub">Não exige políticas formais de IA</div>
+          <span class="opt-badge badge-green">1.0×</span>
+        </div>
+        <div class="opt-card" data-field="governance" data-value="basic">
+          <div class="opt-icon">📋</div>
+          <div class="opt-title">Governance básica</div>
+          <div class="opt-sub">Políticas internas, aprovações simples</div>
+          <span class="opt-badge badge-amber">1.15×</span>
+        </div>
+        <div class="opt-card" data-field="governance" data-value="full">
+          <div class="opt-icon">🔏</div>
+          <div class="opt-title">Framework completo</div>
+          <div class="opt-sub">NIST AI RMF, rastreabilidade total, auditoria</div>
+          <span class="opt-badge badge-rose">1.35×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Time técnico interno do cliente</div>
+      <div class="cards-grid cols-3">
+        <div class="opt-card selected" data-field="internalTeam" data-value="none">
+          <div class="opt-icon">❌</div>
+          <div class="opt-title">Sem time técnico</div>
+          <div class="opt-sub">100% dependente da Hcode</div>
+          <span class="opt-badge badge-amber">+10% suporte</span>
+        </div>
+        <div class="opt-card" data-field="internalTeam" data-value="partial">
+          <div class="opt-icon">🤝</div>
+          <div class="opt-title">Time parcial</div>
+          <div class="opt-sub">Tem devs mas sem experiência em IA</div>
+          <span class="opt-badge badge-cyan">base</span>
+        </div>
+        <div class="opt-card" data-field="internalTeam" data-value="full">
+          <div class="opt-icon">✅</div>
+          <div class="opt-title">Time completo</div>
+          <div class="opt-sub">Time experiente, facilitará o projeto</div>
+          <span class="opt-badge badge-green">−5% transfer</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <div></div>
+      <button class="btn btn-primary" onclick="nextStep()">Próximo: Tipo de Solução →</button>
+    </div>
+  </div>
+
+  <!-- ▸ STEP 2: Tipo de Projeto e Solução -->
+  <div class="step-panel" id="step-2">
+    <div class="step-title">Tipo de Projeto e Solução</div>
+    <div class="step-desc">Selecione a fase do engajamento e o tipo de solução de IA que será entregue.</div>
+
+    <div class="field-group">
+      <div class="field-label">Fase do Engajamento</div>
+      <div class="cards-grid cols-4">
+        <div class="opt-card selected" data-field="projectPhase" data-value="discovery">
+          <div class="opt-icon">🔭</div>
+          <div class="opt-title">Discovery</div>
+          <div class="opt-sub">Diagnóstico, mapeamento, proposta técnica</div>
+          <span class="opt-badge badge-green">menor custo</span>
+        </div>
+        <div class="opt-card" data-field="projectPhase" data-value="poc">
+          <div class="opt-icon">🧪</div>
+          <div class="opt-title">PoC</div>
+          <div class="opt-sub">Prova de conceito funcional</div>
+          <span class="opt-badge badge-cyan">validação</span>
+        </div>
+        <div class="opt-card" data-field="projectPhase" data-value="mvp">
+          <div class="opt-icon">🚀</div>
+          <div class="opt-title">MVP</div>
+          <div class="opt-sub">Produto mínimo viável em produção</div>
+          <span class="opt-badge badge-amber">produção</span>
+        </div>
+        <div class="opt-card" data-field="projectPhase" data-value="full">
+          <div class="opt-icon">🏗️</div>
+          <div class="opt-title">Projeto Completo</div>
+          <div class="opt-sub">Solução enterprise completa com suporte</div>
+          <span class="opt-badge badge-rose">enterprise</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Tipo de Solução de IA</div>
+      <div class="cards-grid cols-3" id="solution-grid">
+
+        <div class="opt-card selected" data-field="solutionType" data-value="automation-simple">
+          <div class="opt-icon">⚙️</div>
+          <div class="opt-title">Automação Simples</div>
+          <div class="opt-sub">Make, Zapier, n8n sem IA — fluxos de dados</div>
+          <span class="opt-badge badge-green">nível 1</span>
+        </div>
+
+        <div class="opt-card" data-field="solutionType" data-value="automation-ai">
+          <div class="opt-icon">⚡</div>
+          <div class="opt-title">Automação com IA</div>
+          <div class="opt-sub">n8n + LLM — classificação, extração, sumarização</div>
+          <span class="opt-badge badge-cyan">nível 2</span>
+        </div>
+
+        <div class="opt-card" data-field="solutionType" data-value="chatbot-simple">
+          <div class="opt-icon">💬</div>
+          <div class="opt-title">Chatbot Simples</div>
+          <div class="opt-sub">FAQ, fluxo fixo, sem memória persistente</div>
+          <span class="opt-badge badge-cyan">nível 2</span>
+        </div>
+
+        <div class="opt-card" data-field="solutionType" data-value="chatbot-rag">
+          <div class="opt-icon">🧠</div>
+          <div class="opt-title">Chatbot com RAG</div>
+          <div class="opt-sub">Base de conhecimento vetorial + LLM</div>
+          <span class="opt-badge badge-amber">nível 3</span>
+        </div>
+
+        <div class="opt-card" data-field="solutionType" data-value="agent-python">
+          <div class="opt-icon">🤖</div>
+          <div class="opt-title">Agente Python</div>
+          <div class="opt-sub">Agente autônomo com tools e memória</div>
+          <span class="opt-badge badge-amber">nível 3</span>
+        </div>
+
+        <div class="opt-card" data-field="solutionType" data-value="multiagent-langchain">
+          <div class="opt-icon">🔗</div>
+          <div class="opt-title">Multi-agente LangChain</div>
+          <div class="opt-sub">Chains, agents, tools, memória distribuída</div>
+          <span class="opt-badge badge-violet">nível 4</span>
+        </div>
+
+        <div class="opt-card" data-field="solutionType" data-value="langgraph">
+          <div class="opt-icon">🕸️</div>
+          <div class="opt-title">Orquestração LangGraph</div>
+          <div class="opt-sub">Grafo de estados, HIL, time travel, multi-agente</div>
+          <span class="opt-badge badge-violet">nível 5</span>
+        </div>
+
+        <div class="opt-card" data-field="solutionType" data-value="rag-enterprise">
+          <div class="opt-icon">📚</div>
+          <div class="opt-title">RAG Enterprise</div>
+          <div class="opt-sub">Pipeline completo: ingestão, chunking, retrieval, rerank</div>
+          <span class="opt-badge badge-violet">nível 5</span>
+        </div>
+
+        <div class="opt-card" data-field="solutionType" data-value="adk-vertex">
+          <div class="opt-icon">☁️</div>
+          <div class="opt-title">ADK + Vertex AI</div>
+          <div class="opt-sub">Google ADK, Gemini, Vertex Search, GCP</div>
+          <span class="opt-badge badge-rose">nível 5</span>
+        </div>
+
+        <div class="opt-card" data-field="solutionType" data-value="computer-vision">
+          <div class="opt-icon">👁️</div>
+          <div class="opt-title">Computer Vision</div>
+          <div class="opt-sub">Detecção, OCR, análise de imagens/vídeos</div>
+          <span class="opt-badge badge-rose">nível 4</span>
+        </div>
+
+        <div class="opt-card" data-field="solutionType" data-value="data-pipeline">
+          <div class="opt-icon">🔄</div>
+          <div class="opt-title">Pipeline de Dados IA</div>
+          <div class="opt-sub">ETL inteligente, feature store, embeddings em escala</div>
+          <span class="opt-badge badge-rose">nível 4</span>
+        </div>
+
+        <div class="opt-card" data-field="solutionType" data-value="full-system">
+          <div class="opt-icon">🏛️</div>
+          <div class="opt-title">Sistema Completo Multi-Tech</div>
+          <div class="opt-sub">LangGraph + RAG + ADK + integrações enterprise</div>
+          <span class="opt-badge badge-rose">nível 6</span>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn btn-ghost" onclick="prevStep()">← Voltar</button>
+      <button class="btn btn-primary" onclick="nextStep()">Próximo: Complexidade Técnica →</button>
+    </div>
+  </div>
+
+  <!-- ▸ STEP 3: Complexidade Técnica -->
+  <div class="step-panel" id="step-3">
+    <div class="step-title">Complexidade Técnica</div>
+    <div class="step-desc">Detalhes da arquitetura que impactam diretamente o esforço de desenvolvimento.</div>
+
+    <div class="field-group">
+      <div class="field-label">Número de Integrações <span class="info-tip">APIs, bancos, ERP, CRM, sistemas legados</span></div>
+      <div class="cards-grid cols-4">
+        <div class="opt-card selected" data-field="integrations" data-value="none">
+          <div class="opt-icon">🔵</div>
+          <div class="opt-title">Nenhuma</div>
+          <div class="opt-sub">Sistema standalone</div>
+          <span class="opt-badge badge-green">1.0×</span>
+        </div>
+        <div class="opt-card" data-field="integrations" data-value="low">
+          <div class="opt-icon">🔌</div>
+          <div class="opt-title">1–3 integrações</div>
+          <div class="opt-sub">APIs REST simples</div>
+          <span class="opt-badge badge-cyan">1.15×</span>
+        </div>
+        <div class="opt-card" data-field="integrations" data-value="medium">
+          <div class="opt-icon">🔗</div>
+          <div class="opt-title">4–10 integrações</div>
+          <div class="opt-sub">ERP, CRM, bancos de dados</div>
+          <span class="opt-badge badge-amber">1.35×</span>
+        </div>
+        <div class="opt-card" data-field="integrations" data-value="high">
+          <div class="opt-icon">🕸️</div>
+          <div class="opt-title">10+ integrações</div>
+          <div class="opt-sub">Sistemas legados, SOA, enterprise</div>
+          <span class="opt-badge badge-rose">1.65×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Volume de Dados</div>
+      <div class="cards-grid cols-4">
+        <div class="opt-card selected" data-field="dataVolume" data-value="none">
+          <div class="opt-icon">📄</div>
+          <div class="opt-title">Sem base de dados</div>
+          <div class="opt-sub">Dados em memória ou mock</div>
+          <span class="opt-badge badge-green">1.0×</span>
+        </div>
+        <div class="opt-card" data-field="dataVolume" data-value="small">
+          <div class="opt-icon">📁</div>
+          <div class="opt-title">Até 100 mil docs</div>
+          <div class="opt-sub">Base moderada</div>
+          <span class="opt-badge badge-cyan">1.15×</span>
+        </div>
+        <div class="opt-card" data-field="dataVolume" data-value="medium">
+          <div class="opt-icon">🗄️</div>
+          <div class="opt-title">Até 1 milhão</div>
+          <div class="opt-sub">Requer otimização</div>
+          <span class="opt-badge badge-amber">1.35×</span>
+        </div>
+        <div class="opt-card" data-field="dataVolume" data-value="big">
+          <div class="opt-icon">🏭</div>
+          <div class="opt-title">Big Data</div>
+          <div class="opt-sub">Streaming, pipelines distribuídos</div>
+          <span class="opt-badge badge-rose">1.65×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Infraestrutura e Deploy</div>
+      <div class="cards-grid cols-4">
+        <div class="opt-card selected" data-field="infrastructure" data-value="local">
+          <div class="opt-icon">💻</div>
+          <div class="opt-title">Local / On-prem</div>
+          <div class="opt-sub">Máquina do cliente</div>
+          <span class="opt-badge badge-green">1.0×</span>
+        </div>
+        <div class="opt-card" data-field="infrastructure" data-value="cloud-simple">
+          <div class="opt-icon">☁️</div>
+          <div class="opt-title">Cloud simples</div>
+          <div class="opt-sub">AWS/GCP/Azure básico</div>
+          <span class="opt-badge badge-cyan">1.15×</span>
+        </div>
+        <div class="opt-card" data-field="infrastructure" data-value="cloud-enterprise">
+          <div class="opt-icon">🌩️</div>
+          <div class="opt-title">Cloud enterprise</div>
+          <div class="opt-sub">VPC, IAM, monitoramento</div>
+          <span class="opt-badge badge-amber">1.35×</span>
+        </div>
+        <div class="opt-card" data-field="infrastructure" data-value="multi-cloud">
+          <div class="opt-icon">🌐</div>
+          <div class="opt-title">Multi-cloud / HA</div>
+          <div class="opt-sub">Alta disponibilidade, DR, SLA 99.9%</div>
+          <span class="opt-badge badge-rose">1.55×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Fine-tuning de Modelos</div>
+      <div class="cards-grid cols-3">
+        <div class="opt-card selected" data-field="fineTuning" data-value="none">
+          <div class="opt-icon">🤝</div>
+          <div class="opt-title">Sem fine-tuning</div>
+          <div class="opt-sub">Usa modelos prontos (GPT-4, Gemini, Claude)</div>
+          <span class="opt-badge badge-green">1.0×</span>
+        </div>
+        <div class="opt-card" data-field="fineTuning" data-value="lora">
+          <div class="opt-icon">🎯</div>
+          <div class="opt-title">LoRA / PEFT</div>
+          <div class="opt-sub">Ajuste eficiente com baixo custo computacional</div>
+          <span class="opt-badge badge-amber">1.35×</span>
+        </div>
+        <div class="opt-card" data-field="fineTuning" data-value="full">
+          <div class="opt-icon">🔬</div>
+          <div class="opt-title">Full fine-tuning</div>
+          <div class="opt-sub">GPU cluster, dataset proprietário, treinamento completo</div>
+          <span class="opt-badge badge-rose">1.75×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Criticidade do Deploy <span class="info-tip">impacto de downtime</span></div>
+      <div class="cards-grid cols-4">
+        <div class="opt-card selected" data-field="criticality" data-value="low">
+          <div class="opt-icon">🟢</div>
+          <div class="opt-title">Baixa criticidade</div>
+          <div class="opt-sub">Ferramenta interna, downtime tolerável</div>
+          <span class="opt-badge badge-green">1.0×</span>
+        </div>
+        <div class="opt-card" data-field="criticality" data-value="medium">
+          <div class="opt-icon">🟡</div>
+          <div class="opt-title">Média criticidade</div>
+          <div class="opt-sub">Produto com usuários, SLA informal</div>
+          <span class="opt-badge badge-cyan">1.1×</span>
+        </div>
+        <div class="opt-card" data-field="criticality" data-value="high">
+          <div class="opt-icon">🟠</div>
+          <div class="opt-title">Alta criticidade</div>
+          <div class="opt-sub">SLA formal, impacto financeiro direto</div>
+          <span class="opt-badge badge-amber">1.25×</span>
+        </div>
+        <div class="opt-card" data-field="criticality" data-value="mission">
+          <div class="opt-icon">🔴</div>
+          <div class="opt-title">Mission-critical</div>
+          <div class="opt-sub">24/7, sem downtime, regulado</div>
+          <span class="opt-badge badge-rose">1.45×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn btn-ghost" onclick="prevStep()">← Voltar</button>
+      <button class="btn btn-primary" onclick="nextStep()">Próximo: Entregáveis →</button>
+    </div>
+  </div>
+
+  <!-- ▸ STEP 4: Entregáveis e Timeline -->
+  <div class="step-panel" id="step-4">
+    <div class="step-title">Entregáveis e Timeline</div>
+    <div class="step-desc">Defina o que será entregue, a urgência e o perfil de engajamento com o cliente.</div>
+
+    <div class="field-group">
+      <div class="field-label">Documentação Técnica</div>
+      <div class="cards-grid cols-3">
+        <div class="opt-card selected" data-field="documentation" data-value="none">
+          <div class="opt-icon">📝</div>
+          <div class="opt-title">Sem documentação</div>
+          <div class="opt-sub">Apenas comentários no código</div>
+          <span class="opt-badge badge-green">1.0×</span>
+        </div>
+        <div class="opt-card" data-field="documentation" data-value="basic">
+          <div class="opt-icon">📘</div>
+          <div class="opt-title">Documentação básica</div>
+          <div class="opt-sub">README, diagrama de arquitetura, manual de uso</div>
+          <span class="opt-badge badge-cyan">1.08×</span>
+        </div>
+        <div class="opt-card" data-field="documentation" data-value="full">
+          <div class="opt-icon">📚</div>
+          <div class="opt-title">Enterprise-grade</div>
+          <div class="opt-sub">ADR, runbooks, SLAs, changelog, onboarding</div>
+          <span class="opt-badge badge-amber">1.2×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Treinamento e Capacitação do Time</div>
+      <div class="cards-grid cols-3">
+        <div class="opt-card selected" data-field="training" data-value="none">
+          <div class="opt-icon">🚫</div>
+          <div class="opt-title">Sem treinamento</div>
+          <div class="opt-sub">Cliente assume a operação</div>
+          <span class="opt-badge badge-green">1.0×</span>
+        </div>
+        <div class="opt-card" data-field="training" data-value="basic">
+          <div class="opt-icon">🎓</div>
+          <div class="opt-title">Treinamento básico</div>
+          <div class="opt-sub">Workshop de 4–8h com time técnico</div>
+          <span class="opt-badge badge-cyan">1.07×</span>
+        </div>
+        <div class="opt-card" data-field="training" data-value="full">
+          <div class="opt-icon">🏫</div>
+          <div class="opt-title">Capacitação completa</div>
+          <div class="opt-sub">Programa de treinamento, hands-on, certificação</div>
+          <span class="opt-badge badge-amber">1.18×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Suporte Pós-Entrega</div>
+      <div class="cards-grid cols-4">
+        <div class="opt-card selected" data-field="support" data-value="none">
+          <div class="opt-icon">🏁</div>
+          <div class="opt-title">Sem suporte</div>
+          <div class="opt-sub">Entrega e encerra</div>
+          <span class="opt-badge badge-green">1.0×</span>
+        </div>
+        <div class="opt-card" data-field="support" data-value="days30">
+          <div class="opt-icon">📅</div>
+          <div class="opt-title">30 dias</div>
+          <div class="opt-sub">Correção de bugs críticos</div>
+          <span class="opt-badge badge-cyan">1.06×</span>
+        </div>
+        <div class="opt-card" data-field="support" data-value="months6">
+          <div class="opt-icon">📆</div>
+          <div class="opt-title">6 meses</div>
+          <div class="opt-sub">Manutenção evolutiva</div>
+          <span class="opt-badge badge-amber">1.18×</span>
+        </div>
+        <div class="opt-card" data-field="support" data-value="annual">
+          <div class="opt-icon">♾️</div>
+          <div class="opt-title">Anual (SLA)</div>
+          <div class="opt-sub">Contrato de sustentação com SLA</div>
+          <span class="opt-badge badge-violet">1.30×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Monitoramento e Observabilidade</div>
+      <div class="cards-grid cols-3">
+        <div class="opt-card selected" data-field="monitoring" data-value="none">
+          <div class="opt-icon">👁️</div>
+          <div class="opt-title">Sem monitoramento</div>
+          <div class="opt-sub">Cliente responsável</div>
+          <span class="opt-badge badge-green">1.0×</span>
+        </div>
+        <div class="opt-card" data-field="monitoring" data-value="basic">
+          <div class="opt-icon">📊</div>
+          <div class="opt-title">Monitoramento básico</div>
+          <div class="opt-sub">Logs, alertas, dashboard simples</div>
+          <span class="opt-badge badge-cyan">1.07×</span>
+        </div>
+        <div class="opt-card" data-field="monitoring" data-value="full">
+          <div class="opt-icon">🔭</div>
+          <div class="opt-title">Observabilidade completa</div>
+          <div class="opt-sub">Traces, métricas LLM, drift, anomalias</div>
+          <span class="opt-badge badge-amber">1.18×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Urgência do Projeto</div>
+      <div class="cards-grid cols-3">
+        <div class="opt-card selected" data-field="urgency" data-value="normal">
+          <div class="opt-icon">🗓️</div>
+          <div class="opt-title">Normal</div>
+          <div class="opt-sub">Prazo definido, sem pressão extrema</div>
+          <span class="opt-badge badge-green">1.0×</span>
+        </div>
+        <div class="opt-card" data-field="urgency" data-value="urgent">
+          <div class="opt-icon">⚡</div>
+          <div class="opt-title">Urgente</div>
+          <div class="opt-sub">Prazo reduzido, prioridade alta, horas extras</div>
+          <span class="opt-badge badge-amber">1.3×</span>
+        </div>
+        <div class="opt-card" data-field="urgency" data-value="critical">
+          <div class="opt-icon">🚨</div>
+          <div class="opt-title">Crítico</div>
+          <div class="opt-sub">Deadline imovível, risco de negócio, sprint war</div>
+          <span class="opt-badge badge-rose">1.6×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Envolvimento de Stakeholders</div>
+      <div class="cards-grid cols-4">
+        <div class="opt-card selected" data-field="stakeholders" data-value="low">
+          <div class="opt-icon">👤</div>
+          <div class="opt-title">1–3 pessoas</div>
+          <div class="opt-sub">Time técnico apenas</div>
+          <span class="opt-badge badge-green">1.0×</span>
+        </div>
+        <div class="opt-card" data-field="stakeholders" data-value="medium">
+          <div class="opt-icon">👥</div>
+          <div class="opt-title">4–10 pessoas</div>
+          <div class="opt-sub">Time + gerência</div>
+          <span class="opt-badge badge-cyan">1.1×</span>
+        </div>
+        <div class="opt-card" data-field="stakeholders" data-value="clevel">
+          <div class="opt-icon">🎩</div>
+          <div class="opt-title">C-Level</div>
+          <div class="opt-sub">CTO, CEO envolvidos diretamente</div>
+          <span class="opt-badge badge-amber">1.2×</span>
+        </div>
+        <div class="opt-card" data-field="stakeholders" data-value="board">
+          <div class="opt-icon">🏛️</div>
+          <div class="opt-title">Board / Diretoria</div>
+          <div class="opt-sub">Comitê executivo, apresentações formais</div>
+          <span class="opt-badge badge-rose">1.35×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn btn-ghost" onclick="prevStep()">← Voltar</button>
+      <button class="btn btn-success" onclick="calculate()">💰 Calcular Precificação</button>
+    </div>
+  </div>
+
+  <!-- ▸ STEP 5: Resultados -->
+  <div class="step-panel" id="step-5">
+
+    <div class="print-bar">
+      <button class="btn btn-ghost" style="font-size:.8rem" onclick="goToStep(1)">← Recalcular</button>
+      <button class="btn btn-ghost" style="font-size:.8rem" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+
+    <div class="results-header">
+      <div class="results-badge">✅ Estimativa Gerada — Hcode PrecifAI</div>
+      <div class="price-display">
+        <span class="price-min" id="res-price-min">R$ –</span>
+        <span class="price-sep">—</span>
+        <span class="price-max" id="res-price-max">R$ –</span>
+      </div>
+      <div class="price-label" id="res-phase-label"></div>
+      <div style="margin-top:.5rem">
+        <span class="multiplier-badge-big" id="res-mult-badge">⚙️ Multiplicador total: –</span>
+      </div>
+    </div>
+
+    <div class="results-grid">
+
+      <!-- Timeline -->
+      <div class="res-card">
+        <div class="res-card-title">⏱️ Timeline Estimado</div>
+        <div id="res-timeline"></div>
+      </div>
+
+      <!-- Team -->
+      <div class="res-card">
+        <div class="res-card-title">👥 Composição do Time Recomendada</div>
+        <div class="team-chips" id="res-team"></div>
+      </div>
+
+      <!-- Radar chart -->
+      <div class="res-card full">
+        <div class="res-card-title">🎯 Radar de Complexidade</div>
+        <div class="chart-wrap">
+          <canvas id="radarChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Multiplier breakdown -->
+      <div class="res-card full">
+        <div class="res-card-title">🔢 Breakdown de Multiplicadores</div>
+        <div id="res-multipliers"></div>
+      </div>
+
+      <!-- Alerts -->
+      <div class="res-card full" id="res-alerts-card">
+        <div class="res-card-title">⚠️ Alertas e Recomendações</div>
+        <div id="res-alerts"></div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ══════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════
+const state = {
+  companySize:    'startup',
+  sector:         'tech',
+  regulation:     'none',
+  governance:     'none',
+  internalTeam:   'none',
+  projectPhase:   'discovery',
+  solutionType:   'automation-simple',
+  integrations:   'none',
+  dataVolume:     'none',
+  infrastructure: 'local',
+  fineTuning:     'none',
+  criticality:    'low',
+  documentation:  'none',
+  training:       'none',
+  support:        'none',
+  monitoring:     'none',
+  urgency:        'normal',
+  stakeholders:   'low'
+};
+
+let currentStep = 1;
+let radarChartInstance = null;
+
+// ══════════════════════════════════════════════════
+//  BASE PRICES  [min, max] em R$
+// ══════════════════════════════════════════════════
+const BASE = {
+  'automation-simple':    { discovery:[3000,8000],   poc:[8000,20000],   mvp:[15000,40000],  full:[30000,80000]   },
+  'automation-ai':        { discovery:[5000,12000],  poc:[12000,30000],  mvp:[25000,60000],  full:[50000,120000]  },
+  'chatbot-simple':       { discovery:[5000,12000],  poc:[10000,25000],  mvp:[20000,50000],  full:[40000,100000]  },
+  'chatbot-rag':          { discovery:[8000,18000],  poc:[18000,45000],  mvp:[35000,80000],  full:[70000,180000]  },
+  'agent-python':         { discovery:[8000,20000],  poc:[20000,50000],  mvp:[40000,100000], full:[80000,200000]  },
+  'multiagent-langchain': { discovery:[12000,25000], poc:[25000,65000],  mvp:[50000,130000], full:[100000,280000] },
+  'langgraph':            { discovery:[15000,35000], poc:[35000,90000],  mvp:[70000,180000], full:[150000,400000] },
+  'rag-enterprise':       { discovery:[15000,30000], poc:[30000,80000],  mvp:[60000,160000], full:[120000,350000] },
+  'adk-vertex':           { discovery:[20000,40000], poc:[40000,100000], mvp:[80000,200000], full:[160000,450000] },
+  'computer-vision':      { discovery:[10000,22000], poc:[22000,55000],  mvp:[45000,110000], full:[90000,240000]  },
+  'data-pipeline':        { discovery:[10000,22000], poc:[22000,55000],  mvp:[45000,110000], full:[90000,240000]  },
+  'full-system':          { discovery:[25000,50000], poc:[50000,130000], mvp:[100000,280000],full:[200000,600000] }
+};
+
+// ══════════════════════════════════════════════════
+//  MULTIPLIERS
+// ══════════════════════════════════════════════════
+const MULT = {
+  companySize:    { startup:0.80, pme:1.00, enterprise:1.20, multinacional:1.40 },
+  regulation:     { none:1.00, basic:1.20, high:1.50, max:2.00 },
+  governance:     { none:1.00, basic:1.15, full:1.35 },
+  internalTeam:   { none:1.10, partial:1.00, full:0.95 },
+  integrations:   { none:1.00, low:1.15, medium:1.35, high:1.65 },
+  dataVolume:     { none:1.00, small:1.15, medium:1.35, big:1.65 },
+  infrastructure: { local:1.00, 'cloud-simple':1.15, 'cloud-enterprise':1.35, 'multi-cloud':1.55 },
+  fineTuning:     { none:1.00, lora:1.35, full:1.75 },
+  criticality:    { low:1.00, medium:1.10, high:1.25, mission:1.45 },
+  documentation:  { none:1.00, basic:1.08, full:1.20 },
+  training:       { none:1.00, basic:1.07, full:1.18 },
+  support:        { none:1.00, days30:1.06, months6:1.18, annual:1.30 },
+  monitoring:     { none:1.00, basic:1.07, full:1.18 },
+  urgency:        { normal:1.00, urgent:1.30, critical:1.60 },
+  stakeholders:   { low:1.00, medium:1.10, clevel:1.20, board:1.35 }
+};
+
+const MULT_LABELS = {
+  companySize:    'Porte da empresa',
+  regulation:     'Regulação / Compliance',
+  governance:     'Governança de IA',
+  internalTeam:   'Time técnico interno',
+  integrations:   'Integrações externas',
+  dataVolume:     'Volume de dados',
+  infrastructure: 'Infraestrutura',
+  fineTuning:     'Fine-tuning',
+  criticality:    'Criticidade do deploy',
+  documentation:  'Documentação',
+  training:       'Treinamento',
+  support:        'Suporte pós-entrega',
+  monitoring:     'Monitoramento',
+  urgency:        'Urgência',
+  stakeholders:   'Stakeholders'
+};
+
+// ══════════════════════════════════════════════════
+//  TIMELINE + TEAM
+// ══════════════════════════════════════════════════
+const TIMELINE = {
+  'automation-simple':  { discovery:'1–2 sem',  poc:'2–4 sem',  mvp:'4–8 sem',   full:'2–3 meses'  },
+  'automation-ai':        { discovery:'1–2 sem',  poc:'3–5 sem',  mvp:'6–10 sem',  full:'2–4 meses'  },
+  'chatbot-simple':       { discovery:'1–2 sem',  poc:'2–4 sem',  mvp:'4–8 sem',   full:'2–3 meses'  },
+  'chatbot-rag':          { discovery:'2–3 sem',  poc:'4–6 sem',  mvp:'8–12 sem',  full:'3–5 meses'  },
+  'agent-python':         { discovery:'2–3 sem',  poc:'4–8 sem',  mvp:'8–14 sem',  full:'3–6 meses'  },
+  'multiagent-langchain': { discovery:'2–4 sem',  poc:'6–10 sem', mvp:'12–20 sem', full:'4–7 meses'  },
+  'langgraph':            { discovery:'3–4 sem',  poc:'8–12 sem', mvp:'14–24 sem', full:'5–9 meses'  },
+  'rag-enterprise':       { discovery:'2–4 sem',  poc:'6–10 sem', mvp:'12–20 sem', full:'4–8 meses'  },
+  'adk-vertex':           { discovery:'3–4 sem',  poc:'8–12 sem', mvp:'14–24 sem', full:'5–9 meses'  },
+  'computer-vision':      { discovery:'2–3 sem',  poc:'5–8 sem',  mvp:'10–16 sem', full:'4–7 meses'  },
+  'data-pipeline':        { discovery:'2–3 sem',  poc:'5–8 sem',  mvp:'10–16 sem', full:'4–7 meses'  },
+  'full-system':          { discovery:'3–5 sem',  poc:'10–16 sem',mvp:'20–36 sem', full:'6–12 meses' }
+};
+
+function getTeam(solutionType, projectPhase, state) {
+  const teams = {
+    base: ['🧑‍💼 PM / Tech Lead'],
+    'automation-simple': ['⚙️ Desenvolvedor Back-end'],
+    'automation-ai': ['⚙️ Dev Back-end', '🤖 Engenheiro de IA'],
+    'chatbot-simple': ['💬 Dev Back-end', '🎨 Dev Front-end'],
+    'chatbot-rag': ['🧠 Engenheiro de IA', '💬 Dev Back-end', '🔍 Especialista RAG'],
+    'agent-python': ['🤖 Engenheiro de Agentes', '🧑‍💻 Dev Python'],
+    'multiagent-langchain': ['🏗️ Arquiteto de IA', '🤖 Eng. Agentes (×2)', '🧑‍💻 Dev Python'],
+    'langgraph': ['🏗️ Arquiteto de IA', '🤖 Eng. Agentes (×2)', '🔧 Especialista LangGraph', '🧑‍💻 Dev Python'],
+    'rag-enterprise': ['📚 Especialista RAG', '🧠 Eng. de IA', '🗄️ Eng. de Dados', '🧑‍💻 Dev Back-end'],
+    'adk-vertex': ['☁️ Arquiteto GCP', '🤖 Eng. Agentes ADK', '🧠 Eng. de IA', '🧑‍💻 Dev Python'],
+    'computer-vision': ['👁️ Especialista CV', '🧠 Engenheiro ML', '🧑‍💻 Dev Back-end'],
+    'data-pipeline': ['🗄️ Eng. de Dados', '🧠 Engenheiro ML', '🧑‍💻 Dev Back-end'],
+    'full-system': ['🏗️ Arquiteto de IA', '🤖 Eng. Agentes (×2)', '🗄️ Eng. de Dados', '☁️ MLOps', '🧑‍💻 Dev Full-Stack', '🔒 Segurança']
+  };
+
+  let team = [...teams.base, ...(teams[solutionType] || [])];
+  if (state.regulation !== 'none') team.push('⚖️ Consultor Compliance');
+  if (state.fineTuning !== 'none') team.push('🔬 Engenheiro ML');
+  if (state.monitoring === 'full') team.push('📊 Eng. Observabilidade');
+  if (projectPhase === 'full' || projectPhase === 'mvp') team.push('🧪 QA Engineer');
+  return [...new Set(team)];
+}
+
+// ══════════════════════════════════════════════════
+//  CALCULATE
+// ══════════════════════════════════════════════════
+function calculate() {
+  const base = BASE[state.solutionType][state.projectPhase];
+
+  // Compute each multiplier
+  const multValues = {};
+  let total = 1.0;
+  for (const key of Object.keys(MULT)) {
+    const v = MULT[key][state[key]] ?? 1.0;
+    multValues[key] = v;
+    total *= v;
+  }
+
+  const minPrice = Math.ceil((base[0] * total) / 500) * 500;
+  const maxPrice = Math.ceil((base[1] * total) / 500) * 500;
+
+  const phaseLabels = { discovery:'Discovery', poc:'Prova de Conceito (PoC)', mvp:'MVP (Produto Mínimo Viável)', full:'Projeto Completo' };
+  const solutionLabels = {
+    'automation-simple':'Automação Simples','automation-ai':'Automação com IA','chatbot-simple':'Chatbot Simples',
+    'chatbot-rag':'Chatbot RAG','agent-python':'Agente Python','multiagent-langchain':'Multi-agente LangChain',
+    'langgraph':'LangGraph','rag-enterprise':'RAG Enterprise','adk-vertex':'ADK + Vertex AI',
+    'computer-vision':'Computer Vision','data-pipeline':'Pipeline de Dados','full-system':'Sistema Completo'
+  };
+
+  document.getElementById('res-price-min').textContent = 'R$ ' + minPrice.toLocaleString('pt-BR');
+  document.getElementById('res-price-max').textContent = 'R$ ' + maxPrice.toLocaleString('pt-BR');
+  document.getElementById('res-phase-label').textContent =
+    phaseLabels[state.projectPhase] + ' · ' + solutionLabels[state.solutionType];
+  document.getElementById('res-mult-badge').textContent =
+    '⚙️ Multiplicador total: ' + total.toFixed(2) + '×';
+
+  // Timeline
+  const tl = TIMELINE[state.solutionType]?.[state.projectPhase] || '–';
+  let tlHtml = `
+    <div class="timeline-row"><span class="timeline-label">Duração estimada</span><span class="timeline-value">${tl}</span></div>
+    <div class="timeline-row"><span class="timeline-label">Fase</span><span class="timeline-value">${phaseLabels[state.projectPhase]}</span></div>
+    <div class="timeline-row"><span class="timeline-label">Tecnologia</span><span class="timeline-value">${solutionLabels[state.solutionType]}</span></div>
+  `;
+  if (state.urgency === 'urgent') tlHtml += `<div class="timeline-row"><span class="timeline-label">⚡ Urgência</span><span class="timeline-value" style="color:var(--amber-l)">Reduzir prazo em ~30%</span></div>`;
+  if (state.urgency === 'critical') tlHtml += `<div class="timeline-row"><span class="timeline-label">🚨 Sprint war</span><span class="timeline-value" style="color:var(--rose-l)">Prazo comprimido, horas extras</span></div>`;
+  document.getElementById('res-timeline').innerHTML = tlHtml;
+
+  // Team
+  const team = getTeam(state.solutionType, state.projectPhase, state);
+  document.getElementById('res-team').innerHTML = team.map(t => `<span class="team-chip">${t}</span>`).join('');
+
+  // Multipliers breakdown
+  const multHtml = Object.entries(multValues).map(([key, val]) => {
+    const pct = ((val - 1) * 100);
+    const color = val > 1.5 ? 'var(--rose-l)' : val > 1.2 ? 'var(--amber-l)' : val < 1 ? 'var(--green-l)' : 'var(--primary-l)';
+    const barPct = Math.min(100, Math.abs((val - 0.5) / 1.5) * 100);
+    const sign = pct >= 0 ? '+' : '';
+    return `<div class="mult-row">
+      <span class="mult-name">📍 ${MULT_LABELS[key]}</span>
+      <div class="mult-bar-wrap"><div class="mult-bar" style="width:${barPct}%;background:${color}"></div></div>
+      <span class="mult-val" style="color:${color}">${val.toFixed(2)}× <small style="font-weight:400;font-size:.72rem;color:var(--dim)">${sign}${pct.toFixed(0)}%</small></span>
+    </div>`;
+  }).join('');
+  document.getElementById('res-multipliers').innerHTML = multHtml;
+
+  // Radar chart
+  const radarData = {
+    labels: ['Regulação', 'Complexidade\nTécnica', 'Volume\nde Dados', 'Integra-\nções', 'Criticidade', 'Urgência', 'Governance'],
+    datasets: [{
+      label: 'Complexidade',
+      data: [
+        ({none:1,basic:2,high:4,max:5}[state.regulation] || 1),
+        ({none:1,lora:3,full:5}[state.fineTuning] || 1),
+        ({none:1,small:2,medium:3,big:5}[state.dataVolume] || 1),
+        ({none:1,low:2,medium:3,high:5}[state.integrations] || 1),
+        ({low:1,medium:2,high:3,mission:5}[state.criticality] || 1),
+        ({normal:1,urgent:3,critical:5}[state.urgency] || 1),
+        ({none:1,basic:2,full:4}[state.governance] || 1)
+      ],
+      backgroundColor: 'rgba(99,102,241,0.18)',
+      borderColor: 'rgba(99,102,241,0.8)',
+      pointBackgroundColor: 'rgba(129,140,248,1)',
+      borderWidth: 2,
+      pointRadius: 4
+    }]
+  };
+
+  if (radarChartInstance) radarChartInstance.destroy();
+  const ctx = document.getElementById('radarChart').getContext('2d');
+  radarChartInstance = new Chart(ctx, {
+    type: 'radar',
+    data: radarData,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        r: {
+          min: 0, max: 5,
+          ticks: { display: false, stepSize: 1 },
+          grid: { color: 'rgba(71,85,105,0.4)' },
+          angleLines: { color: 'rgba(71,85,105,0.4)' },
+          pointLabels: { color: '#94a3b8', font: { size: 11 } }
+        }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+
+  // Alerts
+  const alerts = [];
+
+  if (state.regulation === 'max' && state.governance === 'none')
+    alerts.push({ type:'rose', icon:'🔴', title:'Risco Regulatório Crítico', msg:'Regulação máxima sem governance estruturada é incoerente. Recomendamos incluir um framework mínimo de governance (NIST AI RMF ou ISO 42001) no escopo.' });
+
+  if (state.fineTuning === 'full' && (state.projectPhase === 'discovery' || state.projectPhase === 'poc'))
+    alerts.push({ type:'amber', icon:'⚠️', title:'Fine-tuning muito cedo', msg:'Full fine-tuning em fase de Discovery/PoC geralmente é desperdício de recurso. Considere validar o problema antes com modelos prontos (GPT-4, Claude, Gemini).' });
+
+  if (state.urgency === 'critical' && state.solutionType === 'full-system')
+    alerts.push({ type:'rose', icon:'🚨', title:'Combinação de Risco Extremo', msg:'Sistema completo multi-tech com prazo crítico é a combinação de maior risco de falha. Recomendamos negociar escopo reduzido (MVP) ou prazo realista.' });
+
+  if (state.dataVolume === 'big' && state.infrastructure === 'local')
+    alerts.push({ type:'amber', icon:'⚠️', title:'Big Data em infraestrutura local', msg:'Volumes de Big Data em máquinas on-prem demandam hardware especializado. Recomendamos migração para cloud antes de iniciar o projeto.' });
+
+  if (state.support === 'none' && state.criticality === 'mission')
+    alerts.push({ type:'rose', icon:'🔴', title:'Mission-critical sem suporte', msg:'Sistemas mission-critical sem contrato de suporte representam risco operacional alto. Inclua ao menos 6 meses de SLA na proposta.' });
+
+  if (total > 4.0)
+    alerts.push({ type:'amber', icon:'💡', title:'Multiplicador muito alto (>' + total.toFixed(1) + '×)', msg:'Combinação de fatores resulta em projeto de alta complexidade. Considere dividir em fases (Discovery → PoC → MVP) para reduzir o risco financeiro do cliente.' });
+
+  if (state.projectPhase === 'discovery' && (state.solutionType === 'langgraph' || state.solutionType === 'full-system'))
+    alerts.push({ type:'blue', icon:'ℹ️', title:'Discovery recomendado antes de tudo', msg:'Ótima escolha começar com Discovery para essa arquitetura. Defina claramente os casos de uso antes de evoluir para PoC ou MVP.' });
+
+  if (total <= 1.3 && base[0] < 15000)
+    alerts.push({ type:'green', icon:'✅', title:'Projeto de baixa complexidade', msg:'Boa escolha para projetos de prova de valor rápida. Pode ser entregue em sprint único e tem ROI facilmente mensurável.' });
+
+  if (state.regulation !== 'none' && state.sector === 'financeiro')
+    alerts.push({ type:'amber', icon:'🏦', title:'Setor Financeiro com Regulação', msg:'Projetos no setor financeiro com IA estão sujeitos à Resolução BCB 4.658 e Resolução CMN 4.893. Inclua DPIA e análise de risco de modelo no escopo.' });
+
+  const alertsHtml = alerts.length
+    ? alerts.map(a => `
+        <div class="alert alert-${a.type}">
+          <span class="alert-icon">${a.icon}</span>
+          <div class="alert-body">
+            <div class="alert-title">${a.title}</div>
+            ${a.msg}
+          </div>
+        </div>`).join('')
+    : '<div style="font-size:.82rem;color:var(--dim);padding:.5rem 0">Nenhum alerta identificado para essa combinação.</div>';
+
+  document.getElementById('res-alerts').innerHTML = alertsHtml;
+
+  goToStep(5);
+}
+
+// ══════════════════════════════════════════════════
+//  WIZARD NAVIGATION
+// ══════════════════════════════════════════════════
+function goToStep(n) {
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('step-' + n).classList.add('active');
+
+  document.querySelectorAll('.progress-step').forEach(s => {
+    const sn = parseInt(s.dataset.step);
+    s.classList.remove('active','done');
+    if (sn === n) s.classList.add('active');
+    else if (sn < n) s.classList.add('done');
+  });
+  currentStep = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function nextStep() { if (currentStep < 5) goToStep(currentStep + 1); }
+function prevStep() { if (currentStep > 1) goToStep(currentStep - 1); }
+
+// ══════════════════════════════════════════════════
+//  CARD SELECTION
+// ══════════════════════════════════════════════════
+document.querySelectorAll('.opt-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const field = card.dataset.field;
+    const value = card.dataset.value;
+    // Deselect siblings
+    document.querySelectorAll(`.opt-card[data-field="${field}"]`).forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    state[field] = value;
+  });
+});
+</script>
+</body>
+</html>
