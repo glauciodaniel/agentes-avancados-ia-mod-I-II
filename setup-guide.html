@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Setup Guide - Google ADK</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+
+      * {
+        font-family: "Inter", sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        min-height: 100vh;
+      }
+
+      .card {
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(71, 85, 105, 0.4);
+        backdrop-filter: blur(10px);
+      }
+
+      .code-block {
+        background: #0f172a;
+        border-radius: 8px;
+        border: 1px solid rgba(71, 85, 105, 0.4);
+      }
+
+      .shell-tab {
+        padding: 10px 20px;
+        background: rgba(51, 65, 85, 0.5);
+        border: 1px solid rgba(71, 85, 105, 0.4);
+        border-radius: 8px;
+        color: #94a3b8;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .shell-tab:hover {
+        background: rgba(71, 85, 105, 0.5);
+        color: #e2e8f0;
+      }
+
+      .shell-tab.active {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border-color: #3b82f6;
+        color: white;
+      }
+
+      .copy-btn {
+        transition: all 0.2s;
+      }
+
+      .copy-btn:hover {
+        background: #475569;
+      }
+
+      .copy-btn.copied {
+        background: #22c55e;
+        color: white;
+      }
+
+      .check-item input[type="checkbox"]:checked + label {
+        color: #22c55e;
+      }
+
+      .progress-ring {
+        transition: stroke-dashoffset 0.5s;
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+      }
+
+      .fade-in {
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .step-card {
+        transition: all 0.3s ease;
+      }
+
+      .step-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(59, 130, 246, 0.5);
+      }
+
+      .step-card.completed {
+        border-color: rgba(34, 197, 94, 0.5);
+      }
+
+      .step-card.completed .step-number {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+      }
+
+      pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #1e293b;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #475569;
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+    </style>
+  </head>
+  <body class="text-slate-300">
+    <div class="max-w-5xl mx-auto p-8 fade-in">
+      <!-- Header -->
+      <div class="mb-8">
+        <div class="flex items-center gap-4 mb-4">
+          <div
+            class="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/20"
+          >
+            <i class="fas fa-terminal text-2xl text-white"></i>
+          </div>
+          <div>
+            <h1 class="text-4xl font-black text-white">Setup Guide</h1>
+            <p class="text-slate-400">Google ADK - Agent Development Kit</p>
+          </div>
+        </div>
+        <p class="text-slate-400 text-lg max-w-3xl">
+          Configure seu ambiente de desenvolvimento para trabalhar com agentes
+          de IA usando o Google ADK. Siga os passos abaixo para cada shell de
+          sua preferência.
+        </p>
+      </div>
+
+      <!-- Progress Overview -->
+      <div class="card rounded-2xl p-6 mb-8">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="relative">
+              <svg class="w-20 h-20" viewBox="0 0 100 100">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  fill="none"
+                  stroke="#334155"
+                  stroke-width="8"
+                />
+                <circle
+                  id="progress-ring"
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  fill="none"
+                  stroke="#22c55e"
+                  stroke-width="8"
+                  stroke-linecap="round"
+                  stroke-dasharray="251.2"
+                  stroke-dashoffset="251.2"
+                  class="progress-ring"
+                />
+              </svg>
+              <div
+                class="absolute inset-0 flex items-center justify-center text-white font-bold text-xl"
+                id="progress-percent"
+              >
+                0%
+              </div>
+            </div>
+            <div>
+              <h3 class="text-white font-bold text-lg">Progresso do Setup</h3>
+              <p class="text-slate-400 text-sm" id="progress-status">
+                Nenhum passo validado ainda
+              </p>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <span
+              class="px-3 py-1 bg-slate-800 rounded-full text-xs text-slate-400"
+            >
+              <i class="fas fa-clock mr-1"></i> ~15 min
+            </span>
+            <span
+              class="px-3 py-1 bg-slate-800 rounded-full text-xs text-slate-400"
+            >
+              <i class="fas fa-list-check mr-1"></i>
+              <span id="progress-count">0/4</span> passos
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shell Tabs -->
+      <div class="flex gap-2 mb-6">
+        <button
+          onclick="switchShell('powershell')"
+          class="shell-tab active"
+          id="tab-powershell"
+        >
+          <i class="fab fa-windows mr-2"></i>PowerShell
+        </button>
+        <button onclick="switchShell('bash')" class="shell-tab" id="tab-bash">
+          <i class="fas fa-terminal mr-2"></i>Bash
+        </button>
+        <button onclick="switchShell('cmd')" class="shell-tab" id="tab-cmd">
+          <i class="fas fa-window-maximize mr-2"></i>CMD
+        </button>
+      </div>
+
+      <!-- Setup Steps -->
+      <div id="setup-content" class="space-y-6">
+        <!-- Content will be injected by renderSetupContent() -->
+      </div>
+
+      <!-- Quick Reference -->
+      <div class="card rounded-2xl p-6 mt-8">
+        <h3 class="text-lg font-bold text-white mb-4">
+          <i class="fas fa-lightbulb mr-2 text-amber-400"></i> Referência Rápida
+        </h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-slate-800/50 rounded-xl p-4">
+            <h4 class="text-sm font-bold text-white mb-2">Links Úteis</h4>
+            <ul class="space-y-2 text-sm">
+              <li>
+                <a
+                  href="https://cloud.google.com/sdk/docs/install"
+                  target="_blank"
+                  class="text-blue-400 hover:text-blue-300"
+                >
+                  <i class="fas fa-external-link-alt mr-2"></i>Instalação Google
+                  Cloud CLI
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.python.org/downloads/"
+                  target="_blank"
+                  class="text-blue-400 hover:text-blue-300"
+                >
+                  <i class="fas fa-external-link-alt mr-2"></i>Download Python
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://google.github.io/adk-docs/"
+                  target="_blank"
+                  class="text-blue-400 hover:text-blue-300"
+                >
+                  <i class="fas fa-external-link-alt mr-2"></i>Documentação ADK
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div class="bg-slate-800/50 rounded-xl p-4">
+            <h4 class="text-sm font-bold text-white mb-2">Requisitos</h4>
+            <ul class="space-y-2 text-sm text-slate-400">
+              <li>
+                <i class="fas fa-check mr-2 text-green-500"></i>Python 3.10+
+              </li>
+              <li>
+                <i class="fas fa-check mr-2 text-green-500"></i>Conta Google
+                Cloud
+              </li>
+              <li>
+                <i class="fas fa-check mr-2 text-green-500"></i>Projeto GCP
+                ativo
+              </li>
+              <li>
+                <i class="fas fa-check mr-2 text-green-500"></i>APIs habilitadas
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Troubleshooting -->
+      <div class="card rounded-2xl p-6 mt-6">
+        <h3 class="text-lg font-bold text-white mb-4">
+          <i class="fas fa-wrench mr-2 text-orange-400"></i> Solução de
+          Problemas
+        </h3>
+        <div class="space-y-4">
+          <details class="bg-slate-800/50 rounded-xl">
+            <summary
+              class="px-4 py-3 cursor-pointer text-white font-medium hover:text-blue-400"
+            >
+              Python não encontrado no PATH
+            </summary>
+            <div class="px-4 pb-4 text-sm text-slate-400">
+              <p class="mb-2">
+                Certifique-se de que o Python foi adicionado ao PATH durante a
+                instalação. No Windows, reinstale o Python marcando a opção "Add
+                Python to PATH".
+              </p>
+              <div class="code-block p-3 mt-2">
+                <code class="text-green-400"
+                  ># Windows: verificar PATH<br />
+                  $env:PATH -split ';' | Where-Object { $_ -like '*Python*'
+                  }</code
+                >
+              </div>
+            </div>
+          </details>
+          <details class="bg-slate-800/50 rounded-xl">
+            <summary
+              class="px-4 py-3 cursor-pointer text-white font-medium hover:text-blue-400"
+            >
+              Erro de permissão ao ativar venv no PowerShell
+            </summary>
+            <div class="px-4 pb-4 text-sm text-slate-400">
+              <p class="mb-2">
+                Execute o PowerShell como Administrador e altere a política de
+                execução:
+              </p>
+              <div class="code-block p-3 mt-2">
+                <code class="text-green-400"
+                  >Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope
+                  CurrentUser</code
+                >
+              </div>
+            </div>
+          </details>
+          <details class="bg-slate-800/50 rounded-xl">
+            <summary
+              class="px-4 py-3 cursor-pointer text-white font-medium hover:text-blue-400"
+            >
+              gcloud auth falha com erro de browser
+            </summary>
+            <div class="px-4 pb-4 text-sm text-slate-400">
+              <p class="mb-2">
+                Use a flag --no-launch-browser e copie a URL manualmente:
+              </p>
+              <div class="code-block p-3 mt-2">
+                <code class="text-green-400"
+                  >gcloud auth login --no-launch-browser</code
+                >
+              </div>
+            </div>
+          </details>
+          <details class="bg-slate-800/50 rounded-xl">
+            <summary
+              class="px-4 py-3 cursor-pointer text-white font-medium hover:text-blue-400"
+            >
+              ADK não reconhecido após instalação
+            </summary>
+            <div class="px-4 pb-4 text-sm text-slate-400">
+              <p class="mb-2">
+                Verifique se o ambiente virtual está ativado e reinstale o ADK:
+              </p>
+              <div class="code-block p-3 mt-2">
+                <code class="text-green-400"
+                  ># Verificar ambiente ativo<br />
+                  pip list | grep google-adk<br /><br />
+                  # Reinstalar se necessário<br />
+                  pip install --upgrade google-adk</code
+                >
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="mt-8 text-center text-slate-500 text-sm">
+        <p>
+          <i class="fas fa-graduation-cap mr-2"></i> FIAP - Agentes Avançados de
+          IA
+        </p>
+        <p class="mt-1">Módulo 01 - Fundamentos e Setup do Ambiente</p>
+      </div>
+    </div>
+
+    <script>
+      // ==================== STATE ====================
+      let currentShell = "powershell";
+      const completedSteps = new Set();
+
+      // ==================== DATA ====================
+      const shellCommands = {
+        powershell: {
+          python: `# Verificar versão do Python
+python --version
+# Resultado esperado: Python 3.10+ (recomendado 3.11)`,
+          venv: `# Criar ambiente virtual
+python -m venv .venv
+
+# Ativar ambiente virtual (PowerShell)
+.\\.venv\\Scripts\\Activate.ps1
+
+# Verificar se ativou (deve aparecer (.venv) no prompt)
+
+# Instalar dependências do projeto
+pip install -r requirements.txt`,
+          gcloud: `# Verificar instalação do Google Cloud CLI
+gcloud --version
+
+# Autenticar na sua conta Google
+gcloud auth login
+
+# Configurar Application Default Credentials (ADC)
+gcloud auth application-default login`,
+          adk: `# Instalar Google ADK
+pip install google-adk
+
+# Verificar instalação
+adk --version
+
+# Criar primeiro projeto de agente
+adk init meu-primeiro-agente
+
+# Entrar no diretório criado
+cd meu-primeiro-agente
+
+# Ver estrutura do projeto
+Get-ChildItem -Recurse`,
+        },
+        bash: {
+          python: `# Verificar versão do Python
+python --version
+# Resultado esperado: Python 3.10+ (recomendado 3.11)`,
+          venv: `# Criar ambiente virtual
+python -m venv .venv
+
+# Ativar ambiente virtual (Windows)
+# Verificar se ativou (deve aparecer (.venv) no prompt)
+source venv/Scripts/activate
+
+# Ativar ambiente virtual (Bash/Linux/Mac)
+# Verificar se ativou (deve aparecer (.venv) no prompt)
+source .venv/bin/activate
+
+# Instalar dependências do projeto
+pip install -r requirements.txt`,
+          gcloud: `# Verificar instalação do Google Cloud CLI
+gcloud --version
+
+# Autenticar na sua conta Google
+gcloud auth login
+
+# Configurar Application Default Credentials (ADC)
+gcloud auth application-default login`,
+          adk: `# Instalar Google ADK
+pip install google-adk
+
+# Verificar instalação
+adk --version
+
+# Criar primeiro projeto de agente
+adk init meu-primeiro-agente
+
+# Entrar no diretório criado
+cd meu-primeiro-agente
+
+# Ver estrutura do projeto
+ls -la`,
+        },
+        cmd: {
+          python: `REM Verificar versão do Python
+python --version
+REM Resultado esperado: Python 3.10+ (recomendado 3.11)`,
+          venv: `REM Criar ambiente virtual
+python -m venv .venv
+
+REM Ativar ambiente virtual (CMD)
+.venv\\Scripts\\activate.bat
+
+REM Verificar se ativou (deve aparecer (.venv) no prompt)`,
+          gcloud: `REM Verificar instalação do Google Cloud CLI
+gcloud --version
+
+REM Autenticar na sua conta Google
+gcloud auth login
+
+REM Configurar Application Default Credentials (ADC)
+gcloud auth application-default login`,
+          adk: `REM Instalar Google ADK
+pip install google-adk
+
+REM Verificar instalação
+adk --version
+
+REM Criar primeiro projeto de agente
+adk init meu-primeiro-agente
+
+REM Entrar no diretório criado
+cd meu-primeiro-agente
+
+REM Ver estrutura do projeto
+dir /s`,
+        },
+      };
+
+      const stepInfo = {
+        python: {
+          title: "Python",
+          subtitle: "Versão 3.10+",
+          icon: "fab fa-python",
+          description:
+            "Linguagem base para desenvolvimento de agentes com ADK.",
+        },
+        venv: {
+          title: "Ambiente Virtual (venv)",
+          subtitle: "Isolamento de dependências",
+          icon: "fas fa-box",
+          description:
+            "Ambiente isolado para gerenciar dependências do projeto.",
+        },
+        gcloud: {
+          title: "Google Cloud CLI",
+          subtitle: "Autenticação",
+          icon: "fab fa-google",
+          description:
+            "CLI para autenticação e acesso aos serviços Google Cloud.",
+        },
+        adk: {
+          title: "Google ADK",
+          subtitle: "Framework oficial",
+          icon: "fas fa-robot",
+          description:
+            "Agent Development Kit - framework para criar agentes de IA.",
+        },
+      };
+
+      // ==================== FUNCTIONS ====================
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function switchShell(shell) {
+        currentShell = shell;
+        document
+          .querySelectorAll(".shell-tab")
+          .forEach((tab) => tab.classList.remove("active"));
+        document.getElementById(`tab-${shell}`).classList.add("active");
+        renderSetupContent();
+      }
+
+      function copyCode(button) {
+        const pre = button.parentElement.querySelector("pre");
+        const text = pre.textContent;
+
+        navigator.clipboard.writeText(text).then(() => {
+          const originalHtml = button.innerHTML;
+          button.innerHTML = '<i class="fas fa-check mr-1"></i>Copiado!';
+          button.classList.add("copied");
+
+          setTimeout(() => {
+            button.innerHTML = originalHtml;
+            button.classList.remove("copied");
+          }, 2000);
+        });
+      }
+
+      function toggleStep(step) {
+        const checkbox = document.getElementById(`check-${step}`);
+        const card = document.getElementById(`card-${step}`);
+
+        if (checkbox.checked) {
+          completedSteps.add(step);
+          card.classList.add("completed");
+        } else {
+          completedSteps.delete(step);
+          card.classList.remove("completed");
+        }
+
+        updateProgress();
+      }
+
+      function updateProgress() {
+        const total = 4;
+        const completed = completedSteps.size;
+        const percent = Math.round((completed / total) * 100);
+
+        // Update progress ring
+        const ring = document.getElementById("progress-ring");
+        const circumference = 251.2;
+        const offset = circumference - (completed / total) * circumference;
+        ring.style.strokeDashoffset = offset;
+
+        // Update text
+        document.getElementById("progress-percent").textContent = `${percent}%`;
+        document.getElementById("progress-count").textContent =
+          `${completed}/${total}`;
+
+        // Update status message
+        const statusEl = document.getElementById("progress-status");
+        if (completed === 0) {
+          statusEl.textContent = "Nenhum passo validado ainda";
+        } else if (completed === total) {
+          statusEl.textContent =
+            "Setup completo! Você está pronto para começar.";
+          statusEl.className = "text-green-400 text-sm";
+        } else {
+          statusEl.textContent = `${completed} de ${total} passos validados`;
+          statusEl.className = "text-slate-400 text-sm";
+        }
+      }
+
+      function renderSetupContent() {
+        const container = document.getElementById("setup-content");
+        const steps = ["python", "venv", "gcloud", "adk"];
+
+        container.innerHTML = steps
+          .map(
+            (step, i) => `
+                <div id="card-${step}" class="card step-card rounded-2xl overflow-hidden ${completedSteps.has(step) ? "completed" : ""}">
+                    <div class="bg-slate-800/80 px-6 py-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div id="number-${step}" class="step-number w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg ${completedSteps.has(step) ? "!from-green-500 !to-green-600" : ""}">
+                                ${completedSteps.has(step) ? '<i class="fas fa-check"></i>' : i + 1}
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-slate-700 rounded-lg flex items-center justify-center">
+                                    <i class="${stepInfo[step].icon} text-slate-400 text-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-white font-bold text-lg">${stepInfo[step].title}</h3>
+                                    <p class="text-xs text-slate-400">${stepInfo[step].subtitle}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="check-item flex items-center gap-3">
+                            <label for="check-${step}" class="text-sm text-slate-400 cursor-pointer select-none">
+                                Validado
+                            </label>
+                            <input 
+                                type="checkbox" 
+                                id="check-${step}" 
+                                class="w-5 h-5 accent-green-500 cursor-pointer"
+                                ${completedSteps.has(step) ? "checked" : ""}
+                                onchange="toggleStep('${step}')"
+                            >
+                        </div>
+                    </div>
+                    <div class="px-6 py-3 bg-slate-800/40 border-b border-slate-700/50">
+                        <p class="text-sm text-slate-400">
+                            <i class="fas fa-info-circle mr-2 text-blue-400"></i>
+                            ${stepInfo[step].description}
+                        </p>
+                    </div>
+                    <div class="code-block m-4 relative">
+                        <button onclick="copyCode(this)" class="copy-btn absolute top-3 right-3 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs rounded-lg font-medium">
+                            <i class="fas fa-copy mr-1"></i>Copiar
+                        </button>
+                        <pre class="p-4 pr-24 text-sm text-green-400 overflow-x-auto leading-relaxed">${escapeHtml(shellCommands[currentShell][step])}</pre>
+                    </div>
+                </div>
+            `,
+          )
+          .join("");
+      }
+
+      // ==================== INIT ====================
+      document.addEventListener("DOMContentLoaded", () => {
+        renderSetupContent();
+      });
+    </script>
+  </body>
+</html>

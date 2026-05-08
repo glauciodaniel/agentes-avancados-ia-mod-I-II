@@ -1,0 +1,1734 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lab: Calculadora de Custos - Agentes de IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+
+      * {
+        font-family: "Inter", sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        min-height: 100vh;
+      }
+
+      .card {
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(71, 85, 105, 0.4);
+        backdrop-filter: blur(10px);
+      }
+
+      .code-block {
+        background: #0f172a;
+        border-radius: 8px;
+        border: 1px solid rgba(71, 85, 105, 0.4);
+      }
+
+      .fade-in {
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #1e293b;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #475569;
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+
+      pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      /* Dynamic border colors for Tailwind */
+      .border-green-500 {
+        border-color: #22c55e;
+      }
+      .border-blue-500 {
+        border-color: #3b82f6;
+      }
+      .border-purple-500 {
+        border-color: #a855f7;
+      }
+      .border-cyan-500 {
+        border-color: #06b6d4;
+      }
+      .border-amber-500 {
+        border-color: #f59e0b;
+      }
+      .border-pink-500 {
+        border-color: #ec4899;
+      }
+      .border-red-500 {
+        border-color: #ef4444;
+      }
+    </style>
+  </head>
+  <body class="text-slate-300">
+    <div id="main-content" class="max-w-7xl mx-auto p-6 fade-in">
+      <!-- Content will be rendered here -->
+    </div>
+
+    <script>
+      // ==================== DATA ====================
+      const labCustos = {
+        title: "Lab Prático: Estimativa de Custos com Calculadora Google",
+        subtitle: "Cenário Real: Agente de Análise de Crédito Empresarial BV",
+
+        scenario: {
+          name: "Assistente de Análise de Crédito Empresarial (BV Crédito PJ)",
+          description:
+            "Um agente de IA avançado que auxilia gerentes de relacionamento do Banco BV na análise de crédito para empresas (Pessoas Jurídicas). O agente analisa documentos financeiros, consulta bureaus de crédito, avalia garantias e emite parecer técnico estruturado.",
+          persona: {
+            name: "Carlos Silva",
+            role: "Gerente de TI - Área de Crédito",
+            challenge:
+              "A diretoria aprovou o projeto do agente de IA para análise de crédito PJ. Agora Carlos precisa apresentar o orçamento mensal de operação em produção. Ele tem 48 horas para entregar uma estimativa detalhada com cenário otimizado e cenário pessimista.",
+          },
+          objectives: [
+            "Estimar custo mensal do agente em produção",
+            "Comparar cenário otimizado vs não-otimizado",
+            "Identificar oportunidades de economia",
+            "Justificar ROI para a diretoria",
+          ],
+        },
+
+        volumeData: {
+          monthlyAnalyses: 2500,
+          realtimeCount: 1500,
+          realtimePercent: 60,
+          batchCount: 1000,
+          batchPercent: 40,
+          workingDays: 22,
+          analysesPerDay: 114,
+          peakHours: "9h-12h e 14h-17h",
+        },
+
+        tokenBreakdown: {
+          realtime: {
+            inputText: {
+              value: 8000,
+              description:
+                "Prompts + dados do cliente (CNPJ, faturamento, setor, histórico)",
+            },
+            inputPDFs: {
+              count: 3,
+              tokensEach: 45000,
+              total: 135000,
+              files: [
+                "Balanço Patrimonial",
+                "DRE (Demonstrativo de Resultados)",
+                "Contratos sociais",
+              ],
+            },
+            inputImages: {
+              count: 2,
+              tokensEach: 258,
+              total: 516,
+              description: "Fotos de garantias (imóveis, equipamentos)",
+            },
+            grounding: {
+              callsPerAnalysis: 4,
+              types: [
+                { name: "Serasa Experian", cost: "$35/1k" },
+                { name: "Cotação Dólar (PTAX)", cost: "$35/1k" },
+                { name: "Regulamentação Bacen", cost: "$35/1k" },
+                { name: "Score de Risco Setorial", cost: "$35/1k" },
+              ],
+              totalCallsMonth: 10000,
+            },
+            cache: {
+              size: 80000,
+              description:
+                "Manual de Políticas de Crédito BV (v3.2 - atualizado trimestralmente)",
+              reused: true,
+              ttl: "24 horas",
+            },
+            output: {
+              value: 2500,
+              description:
+                "Parecer técnico estruturado em JSON (score, recomendação, justificativa, alertas)",
+            },
+            thinkingMode: {
+              enabled: true,
+              reason:
+                "Análise de risco requer raciocínio complexo e decomposição de tarefas",
+            },
+          },
+          batch: {
+            description:
+              "Mesma composição do real-time, processado durante a madrugada (02h-06h) com 50% de desconto",
+            discount: "50%",
+          },
+        },
+
+        model: {
+          name: "Gemini 2.5 Pro",
+          reasons: [
+            "Thinking Mode disponível",
+            "Quota gratuita de grounding maior (10k/dia vs 1.5k do Flash)",
+            "Melhor performance em raciocínio complexo",
+            "Context window de 2M tokens",
+          ],
+        },
+
+        bestCase: {
+          title: "Cenário Otimizado (Melhores Práticas)",
+          assumptions: [
+            "Context Caching ativo para o manual de 80k tokens",
+            "40% das análises processadas em Batch (madrugada)",
+            "Grounding dentro da quota gratuita do Pro (10k/dia = 220k/mês)",
+            "Output otimizado com schema enxuto (2.500 tokens)",
+            "Thinking Mode ativo",
+          ],
+          calculations: {
+            realtimeInput: {
+              text: "1.500 × 8.000 = 12.000.000 tokens",
+              pdfs: "1.500 × 135.000 = 202.500.000 tokens",
+              images: "1.500 × 516 = 774.000 tokens",
+              cached: "1.500 × 80.000 cached = 120.000.000 tokens cached",
+              total:
+                "215.274.000 tokens (normal) + 120.000.000 tokens (cached)",
+            },
+            realtimeInputCost: {
+              normal: "215.274.000 × $1.25/1M = $269.09",
+              cached: "120.000.000 × $0.125/1M = $15.00",
+              total: "$284.09",
+            },
+            realtimeOutput: {
+              regular: "1.500 × 2.500 = 3.750.000 tokens",
+              thinking: "1.500 × 2.500 = 3.750.000 tokens (thinking mode)",
+              total: "7.500.000 tokens",
+            },
+            realtimeOutputCost: {
+              calculation: "7.500.000 × $5.00/1M = $37.50",
+            },
+            batchInput: {
+              text: "1.000 × 8.000 = 8.000.000 tokens",
+              pdfs: "1.000 × 135.000 = 135.000.000 tokens",
+              images: "1.000 × 516 = 516.000 tokens",
+              cached: "1.000 × 80.000 cached = 80.000.000 tokens cached",
+              total: "143.516.000 tokens (normal) + 80.000.000 tokens (cached)",
+            },
+            batchInputCost: {
+              normal: "143.516.000 × $1.25/1M × 0.5 = $89.70",
+              cached: "80.000.000 × $0.125/1M × 0.5 = $5.00",
+              total: "$94.70",
+            },
+            batchOutput: {
+              regular: "1.000 × 2.500 = 2.500.000 tokens",
+              thinking: "1.000 × 2.500 = 2.500.000 tokens",
+              total: "5.000.000 tokens",
+            },
+            batchOutputCost: {
+              calculation: "5.000.000 × $5.00/1M × 0.5 = $12.50",
+            },
+            cacheStorage: {
+              tokens: "80.000 tokens",
+              hours: "720 horas/mês (30 dias × 24h)",
+              calculation: "(80.000 / 1.000.000) × $4.50 × 720 = $259.20",
+            },
+            grounding: {
+              totalCalls: "2.500 análises × 4 calls = 10.000 calls/mês",
+              freeQuota: "10.000 calls/dia × 22 dias = 220.000 calls/mês (Pro)",
+              withinQuota: true,
+              cost: "$0.00 (dentro da quota gratuita)",
+            },
+            totalMonthly: {
+              inputRealtime: "$284.09",
+              outputRealtime: "$37.50",
+              inputBatch: "$94.70",
+              outputBatch: "$12.50",
+              cacheStorage: "$259.20",
+              grounding: "$0.00",
+              total: "$687.99/mês",
+            },
+          },
+        },
+
+        worstCase: {
+          title: "Cenário Não-Otimizado (Sem Boas Práticas)",
+          assumptions: [
+            "SEM Context Caching (re-envia manual 80k toda vez)",
+            "100% real-time (nenhum batch)",
+            "Grounding EXCEDE quota gratuita (paga tudo)",
+            "Output verboso (4.000 tokens em vez de 2.500)",
+            "Thinking Mode ativo",
+          ],
+          calculations: {
+            realtimeInput: {
+              text: "2.500 × 8.000 = 20.000.000 tokens",
+              pdfs: "2.500 × 135.000 = 337.500.000 tokens",
+              images: "2.500 × 516 = 1.290.000 tokens",
+              manual: "2.500 × 80.000 = 200.000.000 tokens (SEM cache!)",
+              total: "558.790.000 tokens",
+            },
+            realtimeInputCost: {
+              calculation: "558.790.000 × $1.25/1M = $698.49",
+            },
+            realtimeOutput: {
+              regular: "2.500 × 4.000 = 10.000.000 tokens",
+              thinking: "2.500 × 4.000 = 10.000.000 tokens",
+              total: "20.000.000 tokens",
+            },
+            realtimeOutputCost: {
+              calculation: "20.000.000 × $5.00/1M = $100.00",
+            },
+            grounding: {
+              totalCalls: "2.500 análises × 4 calls = 10.000 calls/mês",
+              freeQuota:
+                "Excedido (implementação incorreta, não usa quota Pro)",
+              cost: "10.000 × $35/1.000 = $350.00",
+            },
+            cacheStorage: {
+              cost: "$0.00 (não está usando cache)",
+            },
+            totalMonthly: {
+              input: "$698.49",
+              output: "$100.00",
+              grounding: "$350.00",
+              total: "$1.148.49/mês",
+            },
+          },
+        },
+
+        comparison: {
+          bestCase: "$687.99",
+          worstCase: "$1.148.49",
+          savings: "$460.50",
+          savingsPercent: "40%",
+          annualSavings: "$5.526/ano",
+        },
+
+        advancedOptimizations: [
+          {
+            id: 1,
+            name: "Tool Calling vs Grounding (ECONOMIA MASSIVA)",
+            icon: "tools",
+            color: "green",
+            problem:
+              "Grounding Serasa custa $35/1.000 requests. Para 2.500 análises/mês com 1 consulta Serasa cada = 2.500 calls × $35/1k = $87.50/mês",
+            solution:
+              "Criar Tool personalizado que chama API REST interna do BV (que já tem contrato corporativo com Serasa Experian). O custo da API é zero para o projeto (já pago pelo banco).",
+            implementation: {
+              code: `# Tool customizado para Serasa
+@tool
+def consultar_serasa_bv(cnpj: str) -> dict:
+    """Consulta score Serasa via API interna BV."""
+    response = requests.post(
+        'https://api.bv.com.br/v1/serasa/score',
+        headers={'Authorization': f'Bearer {BV_TOKEN}'},
+        json={'cnpj': cnpj}
+    )
+    return response.json()
+
+# Usar no agente
+tools = [consultar_serasa_bv]`,
+              explanation:
+                "Em vez de grounding, o agente chama a tool que usa a API interna",
+            },
+            savings: {
+              monthly: "$87.50 (só Serasa) até $350.00 (todas as 4 consultas)",
+              annual: "$1.050 a $4.200",
+              calculation: "2.500 consultas × $35/1k = $87.50 eliminados",
+            },
+            bonus: [
+              "Latência 60% menor (API direta vs grounding)",
+              "Controle total sobre dados retornados",
+              "Sem dependência de quota de grounding",
+              "Logs e auditoria internos",
+            ],
+            difficulty: "Médio",
+            tradeoffs: [
+              "Precisa manter API interna (DevOps)",
+              "Requer contratos diretos com provedores",
+              "Time de TI precisa gerenciar integrações",
+            ],
+            whenToUse:
+              "Quando já existe API interna ou contrato corporativo com o fornecedor de dados",
+          },
+          {
+            id: 2,
+            name: "Pré-processamento de PDFs",
+            icon: "file-pdf",
+            color: "blue",
+            problem:
+              "PDFs enviados como imagem custam ~45k tokens CADA. 3 PDFs × 45k = 135k tokens por análise.",
+            solution:
+              "Extrair texto do PDF antes de enviar para o LLM usando OCR (Tesseract) ou bibliotecas Python (pypdf, pdfplumber). Texto puro reduz 60-70% dos tokens.",
+            implementation: {
+              code: `import pdfplumber
+
+def extract_pdf_text(pdf_path: str) -> str:
+    """Extrai texto de PDF, reduz ~70% tokens."""
+    with pdfplumber.open(pdf_path) as pdf:
+        text = ""
+        for page in pdf.pages:
+            text += page.extract_text()
+    return text
+
+# Antes: 135k tokens (PDF como imagem)
+# Depois: ~40k tokens (texto extraído)`,
+              explanation: "Envia texto puro em vez de imagem do PDF",
+            },
+            savings: {
+              monthly: "~$178 em input tokens",
+              calculation:
+                "2.500 análises × 95k tokens economizados × $1.25/1M = $296.88 → $118.75 = $178.13 economia",
+            },
+            whenNotToDo: [
+              "PDFs com tabelas complexas multi-coluna",
+              "Documentos com gráficos/charts essenciais",
+              "PDFs escaneados de baixa qualidade",
+              "Quando layout visual é importante",
+            ],
+            difficulty: "Fácil",
+            tradeoffs: [
+              "Pode perder formatação/layout",
+              "OCR tem custo computacional",
+              "Precisa validar qualidade da extração",
+            ],
+          },
+          {
+            id: 3,
+            name: "Cache de Dados Externos (Smart Caching)",
+            icon: "database",
+            color: "purple",
+            problem:
+              "Cotação do dólar (PTAX) é consultada via grounding 2.500 vezes/mês, mas muda apenas 1x/dia. Custo: 2.500 × $35/1k = $87.50",
+            solution:
+              "Implementar cache Redis com TTL de 1 hora para dados que mudam pouco. Uma única consulta serve para ~100 análises.",
+            implementation: {
+              code: `import redis
+from datetime import timedelta
+
+redis_client = redis.Redis(host='localhost')
+
+@tool
+def get_cotacao_dolar_cached() -> float:
+    """Cotação PTAX com cache de 1h."""
+    cached = redis_client.get('ptax:usd:brl')
+    if cached:
+        return float(cached)
+
+    # Consulta real (grounding ou API)
+    cotacao = consultar_bacen_ptax()
+    redis_client.setex(
+        'ptax:usd:brl',
+        timedelta(hours=1),
+        str(cotacao)
+    )
+    return cotacao`,
+              explanation: "Cache reduz 95% das consultas redundantes",
+            },
+            savings: {
+              monthly: "~$83 (95% de $87.50)",
+              calculation:
+                "2.500 consultas → 25 consultas reais (cache hit 99%)",
+            },
+            applicableTo: [
+              "Cotações (atualizam 1x/dia)",
+              "Regulamentações (mudam raramente)",
+              "Scores setoriais (semanais)",
+              "Dados públicos estáticos",
+            ],
+            difficulty: "Médio",
+            infrastructure: "Redis, Memcached ou similar",
+          },
+          {
+            id: 4,
+            name: "Modelo Tiering (Flash para Triagem)",
+            icon: "layer-group",
+            color: "cyan",
+            problem:
+              "Gemini 2.5 Pro custa $1.25/1M input. Flash custa $0.30/1M (4.1x mais barato). Nem toda análise precisa do Pro.",
+            solution:
+              "Implementar pipeline de 2 estágios: (1) Flash faz triagem rápida e classifica complexidade, (2) Pro só para casos complexos/alto valor.",
+            implementation: {
+              architecture: `Fluxo de 2 estágios:
+
+1. TRIAGEM (Flash):
+   - Análise rápida dos dados básicos
+   - Score de complexidade (1-10)
+   - Casos simples (score ≤6): Flash emite parecer
+
+2. ANÁLISE PROFUNDA (Pro):
+   - Casos complexos (score >6): ~30% dos casos
+   - Thinking Mode + análise detalhada
+   - PDFs completos + grounding`,
+              code: `def analyze_credit(data):
+    # Estágio 1: Triagem com Flash
+    flash_model = GenerativeModel('gemini-2.5-flash')
+    triage = flash_model.generate_content(
+        f"Classifique complexidade (1-10): {data}"
+    )
+
+    complexity = extract_score(triage.text)
+
+    if complexity <= 6:
+        # 70% dos casos: Flash resolve
+        return flash_model.generate_content(
+            f"Análise completa: {data}"
+        )
+    else:
+        # 30% dos casos: Pro + Thinking
+        pro_model = GenerativeModel('gemini-2.5-pro')
+        return pro_model.generate_content(
+            data,
+            generation_config={'thinking': True}
+        )`,
+            },
+            savings: {
+              monthly: "~$400-500",
+              calculation:
+                "70% das análises com modelo 4x mais barato = ~60% economia total no input",
+              breakdown: "1.750 análises × Flash ($0.30) + 750 × Pro ($1.25)",
+            },
+            criteriaForPro: [
+              "Valores >R$ 500.000",
+              "Empresas com histórico irregular",
+              "Setores de alto risco",
+              "Garantias complexas",
+            ],
+            difficulty: "Alto",
+            tradeoffs: [
+              "Lógica de roteamento adicional",
+              "Necessita calibração do threshold",
+              "2 chamadas para casos Pro (triagem + análise)",
+            ],
+          },
+          {
+            id: 5,
+            name: "Structured Output Otimizado",
+            icon: "code",
+            color: "amber",
+            problem:
+              "Output JSON verboso com 2.500 tokens. Thinking mode dobra isso para 5.000 tokens efetivos. Output custa $5/1M, então 2.500 análises × 5k tokens = 12.5M tokens × $5 = $62.50",
+            solution:
+              "Criar schema JSON enxuto com apenas campos essenciais. Usar abbreviations e códigos em vez de textos longos.",
+            implementation: {
+              before: `{
+  "recomendacao": "Aprovado com ressalvas devido ao histórico de atrasos...",
+  "justificativa": "A empresa apresenta faturamento consistente...",
+  "score_credito": 750,
+  "alertas": ["Verificar garantias", "Solicitar aval adicional"]
+}
+// ~2.500 tokens`,
+              after: `{
+  "rec": "APR_RESS",
+  "score": 750,
+  "motivo": "fat_ok_hist_atras",
+  "alerts": ["gar", "aval"]
+}
+// ~800 tokens (68% redução)`,
+              code: `generation_config = {
+    'response_mime_type': 'application/json',
+    'response_schema': {
+        'type': 'object',
+        'properties': {
+            'rec': {'type': 'string', 'enum': ['APR', 'APR_RESS', 'REJ']},
+            'score': {'type': 'integer'},
+            'motivo': {'type': 'string', 'maxLength': 50},
+            'alerts': {'type': 'array', 'items': {'type': 'string'}}
+        },
+        'required': ['rec', 'score']
+    }
+}`,
+            },
+            savings: {
+              monthly: "~$42 em output",
+              calculation:
+                "2.500 × (5.000 - 1.600) tokens = 8.5M tokens × $5/1M = $42.50",
+            },
+            techniques: [
+              "Usar códigos (APR, REJ) em vez de textos longos",
+              "Limitar strings com maxLength",
+              "Remover campos opcionais não-críticos",
+              "Usar enums para valores fixos",
+            ],
+            difficulty: "Fácil",
+            tradeoffs: [
+              "Menos legível para humanos",
+              "Precisa de dicionário de códigos",
+              "Front-end precisa expandir abreviações",
+            ],
+          },
+          {
+            id: 6,
+            name: "Image Compression Inteligente",
+            icon: "image",
+            color: "pink",
+            problem:
+              "Fotos de imóveis/garantias podem ter 5-10MB. Gemini tokeniza imagens grandes em mais tokens (~1.5-2x). 2 imagens × 516 tokens base, mas pode chegar a 1.000 tokens cada se não comprimidas.",
+            solution:
+              "Redimensionar imagens para resolução ótima (1024×768px) antes de enviar. Mantém qualidade visual mas reduz ~40% dos tokens.",
+            implementation: {
+              code: `from PIL import Image
+
+def optimize_image_for_llm(image_path: str, max_size=1024):
+    """Redimensiona imagem mantendo aspect ratio."""
+    img = Image.open(image_path)
+
+    # Redimensionar se maior que max_size
+    if max(img.size) > max_size:
+        img.thumbnail((max_size, max_size), Image.LANCZOS)
+
+    # Converter para RGB se necessário
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
+
+    # Salvar otimizado
+    output_path = f"{image_path}_optimized.jpg"
+    img.save(output_path, 'JPEG', quality=85, optimize=True)
+    return output_path
+
+# Antes: 5MB imagem = ~1.000 tokens
+# Depois: 500KB imagem = ~516 tokens (economia ~48%)`,
+              explanation:
+                "Gemini não precisa de resolução 4K para identificar um imóvel",
+            },
+            savings: {
+              monthly: "~$1-2 (pequeno, mas sem esforço)",
+              calculation:
+                "2.500 análises × 2 imagens × 484 tokens economizados = 2.42M × $1.25/1M = $3.03",
+            },
+            guidelines: [
+              "1024px para documentos/fotos gerais",
+              "2048px se detalhes finos são críticos",
+              "JPEG quality 85 (sweet spot)",
+              "Converter PNG → JPEG quando possível",
+            ],
+            difficulty: "Muito Fácil",
+            bonus: "Reduz latência de upload",
+          },
+          {
+            id: 7,
+            name: "Thinking Mode Condicional",
+            icon: "brain",
+            color: "red",
+            problem:
+              "Thinking Mode DOBRA o custo de output ($5 → $10 efetivo por 1M tokens). Para 2.500 análises: 12.5M output tokens × $10 = $125/mês. Nem toda análise precisa de raciocínio profundo.",
+            solution:
+              "Ativar Thinking Mode apenas para análises de alto risco/alto valor (>R$ 500k). Para casos simples, modelo sem thinking é suficiente.",
+            implementation: {
+              code: `def analyze_with_conditional_thinking(data):
+    model = GenerativeModel('gemini-2.5-pro')
+
+    # Critérios para Thinking Mode
+    needs_thinking = (
+        data['valor_credito'] > 500000 or  # >R$500k
+        data['score_bureau'] < 600 or       # Score baixo
+        data['setor'] in ['construção', 'agro']  # Setores voláteis
+    )
+
+    config = {
+        'thinking': needs_thinking,
+        'temperature': 0.2
+    }
+
+    return model.generate_content(data, generation_config=config)
+
+# Apenas ~20% das análises ativam thinking mode`,
+              explanation: "Thinking Mode só quando realmente necessário",
+            },
+            savings: {
+              monthly: "~$50",
+              calculation:
+                "80% análises (2.000) SEM thinking: 2.000 × 2.5k × ($10 - $5) / 1M = $25 economia × 2 = $50",
+            },
+            criteriaForThinking: [
+              "Crédito >R$ 500.000",
+              "Score bureau <600",
+              "Histórico com defaults",
+              "Setores de alto risco",
+              "Garantias complexas/múltiplas",
+            ],
+            difficulty: "Médio",
+            tradeoffs: [
+              "Análises simples podem ser menos profundas",
+              "Precisa definir thresholds",
+              "Monitorar taxa de aprovação por categoria",
+            ],
+            impact: "Alto - thinking mode é um dos maiores custos",
+          },
+        ],
+
+        discussionPoints: [
+          {
+            question: "Por que Context Caching economiza tanto?",
+            answer:
+              "Porque o manual de 80k tokens seria enviado 2.500 vezes/mês SEM cache (200M tokens × $1.25 = $250). COM cache, paga apenas $15 (cached rate) + $259 (storage) = $274, mas elimina $250 de custo normal. A economia real vem de NÃO pagar o preço cheio repetidamente.",
+          },
+          {
+            question: "Tool Calling vs Grounding: quando usar cada um?",
+            answer:
+              "Tool Calling quando você já tem API/contrato (Serasa, CRM interno). Grounding quando precisa de dados públicos/web que você NÃO controla (cotações em tempo real, notícias, regulamentações que mudam).",
+          },
+          {
+            question:
+              "Qual otimização tem o melhor ROI (Retorno sobre Investimento)?",
+            answer:
+              "Tool Calling ($350 economia) com dificuldade média. Structured Output ($42 economia) é fácil mas baixo retorno. Modelo Tiering ($400-500 economia) tem ROI altíssimo MAS é complexo de implementar.",
+          },
+          {
+            question: "Por que a quota de grounding do Pro é importante?",
+            answer:
+              "Pro tem 10k calls/dia gratuitos (220k/mês). Flash tem apenas 1.5k/dia (33k/mês). Com 10k calls/mês de grounding, Pro fica GRÁTIS enquanto Flash pagaria $350. Isso pode inverter a escolha de modelo!",
+          },
+        ],
+
+        commonMistakes: [
+          {
+            mistake: "Esquecer o custo de STORAGE do cache",
+            why: "Calculadora do Google tem campo separado. Muitos alunos somam só o 'cached input price' e esquecem os $4.50/1M/hora de armazenamento.",
+          },
+          {
+            mistake: "Não considerar Thinking Mode no output",
+            why: "Thinking Mode NÃO aparece explícito na calculadora. Output tokens são 'duplicados' (output normal + thinking), dobrando o custo efetivo.",
+          },
+          {
+            mistake: "Confundir quota de grounding Flash vs Pro",
+            why: "Flash: 1.5k/dia. Pro: 10k/dia. Diferença de 6.6x! Para 10k calls/mês, Flash paga $350 enquanto Pro é grátis.",
+          },
+          {
+            mistake:
+              "Ignorar que Batch API precisa de processamento assíncrono",
+            why: "Batch não é para análises em tempo real. Se o gerente precisa da resposta na hora, não pode usar batch. Os 50% de desconto só valem se pode esperar horas.",
+          },
+          {
+            mistake: "Calcular tokens de PDF incorretamente",
+            why: "1 página ≠ X tokens fixos. Depende de: densidade do texto, tabelas, imagens embutidas. A estimativa de 45k por PDF (15 páginas) é média, pode variar 30-60k.",
+          },
+        ],
+
+        toolsAndLinks: {
+          calculator: {
+            name: "Google Cloud Pricing Calculator",
+            url: "https://cloud.google.com/products/calculator",
+            instructions: [
+              "1. Clique em 'Add to Estimate'",
+              "2. Busque 'Vertex AI' → 'Generative AI'",
+              "3. Selecione 'Gemini 2.5 Pro'",
+              "4. Preencha input/output tokens",
+              "5. Ative 'Context Caching' se aplicável",
+              "6. Configure região (us-central1 geralmente)",
+            ],
+          },
+          documentation: {
+            name: "Vertex AI Pricing Documentation",
+            url: "https://cloud.google.com/vertex-ai/generative-ai/pricing",
+            sections: [
+              "Text input/output pricing",
+              "Context caching pricing",
+              "Grounding pricing",
+              "Batch API discounts",
+            ],
+          },
+        },
+      };
+
+      // ==================== HELPERS ====================
+      function copyCode(button) {
+        const pre = button.parentElement.querySelector("pre");
+        navigator.clipboard.writeText(pre.textContent);
+        button.innerHTML = '<i class="fas fa-check mr-1"></i>Copiado!';
+        setTimeout(() => {
+          button.innerHTML = '<i class="fas fa-copy mr-1"></i>Copiar';
+        }, 2000);
+      }
+
+      // ==================== RENDERERS ====================
+      function renderGabaritoLabCustos(labCustos) {
+        return `
+          <div class="card rounded-xl p-6 mb-6 bg-gradient-to-r from-green-900/30 to-emerald-900/30 border-2 border-green-500">
+            <h2 class="text-2xl font-bold text-white mb-4">
+              <i class="fas fa-check-circle text-green-400 mr-2"></i>Gabarito Detalhado
+            </h2>
+
+            <!-- Cenário Otimizado -->
+            <div class="mb-8">
+              <h3 class="text-xl font-bold text-green-400 mb-4">${labCustos.bestCase.title}</h3>
+
+              <div class="space-y-4">
+                <!-- Real-time Input -->
+                <div class="p-4 bg-slate-900/70 rounded-lg">
+                  <h4 class="text-sm font-bold text-white mb-2">Real-time Input (1.500 análises)</h4>
+                  <div class="space-y-1 text-sm font-mono">
+                    <div class="text-slate-400">Texto: ${labCustos.bestCase.calculations.realtimeInput.text}</div>
+                    <div class="text-slate-400">PDFs: ${labCustos.bestCase.calculations.realtimeInput.pdfs}</div>
+                    <div class="text-slate-400">Imagens: ${labCustos.bestCase.calculations.realtimeInput.images}</div>
+                    <div class="text-green-400">Cached: ${labCustos.bestCase.calculations.realtimeInput.cached}</div>
+                    <div class="border-t border-slate-700 pt-2 mt-2 text-white font-bold">
+                      Custo Input Real-time: ${labCustos.bestCase.calculations.realtimeInputCost.total}
+                    </div>
+                    <div class="text-xs text-slate-500">
+                      • Normal: ${labCustos.bestCase.calculations.realtimeInputCost.normal}
+                      <br>• Cached: ${labCustos.bestCase.calculations.realtimeInputCost.cached}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Real-time Output -->
+                <div class="p-4 bg-slate-900/70 rounded-lg">
+                  <h4 class="text-sm font-bold text-white mb-2">Real-time Output (1.500 análises)</h4>
+                  <div class="space-y-1 text-sm font-mono">
+                    <div class="text-slate-400">Output regular: ${labCustos.bestCase.calculations.realtimeOutput.regular}</div>
+                    <div class="text-purple-400">Thinking mode: ${labCustos.bestCase.calculations.realtimeOutput.thinking}</div>
+                    <div class="text-white">Total: ${labCustos.bestCase.calculations.realtimeOutput.total}</div>
+                    <div class="border-t border-slate-700 pt-2 mt-2 text-white font-bold">
+                      Custo Output Real-time: ${labCustos.bestCase.calculations.realtimeOutputCost.calculation}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Batch Input -->
+                <div class="p-4 bg-slate-900/70 rounded-lg">
+                  <h4 class="text-sm font-bold text-white mb-2">Batch Input (1.000 análises) - 50% desconto</h4>
+                  <div class="space-y-1 text-sm font-mono">
+                    <div class="text-slate-400">Texto: ${labCustos.bestCase.calculations.batchInput.text}</div>
+                    <div class="text-slate-400">PDFs: ${labCustos.bestCase.calculations.batchInput.pdfs}</div>
+                    <div class="text-slate-400">Imagens: ${labCustos.bestCase.calculations.batchInput.images}</div>
+                    <div class="text-green-400">Cached: ${labCustos.bestCase.calculations.batchInput.cached}</div>
+                    <div class="border-t border-slate-700 pt-2 mt-2 text-white font-bold">
+                      Custo Input Batch: ${labCustos.bestCase.calculations.batchInputCost.total}
+                    </div>
+                    <div class="text-xs text-slate-500">
+                      • Normal: ${labCustos.bestCase.calculations.batchInputCost.normal}
+                      <br>• Cached: ${labCustos.bestCase.calculations.batchInputCost.cached}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Batch Output -->
+                <div class="p-4 bg-slate-900/70 rounded-lg">
+                  <h4 class="text-sm font-bold text-white mb-2">Batch Output (1.000 análises) - 50% desconto</h4>
+                  <div class="space-y-1 text-sm font-mono">
+                    <div class="text-slate-400">Output regular: ${labCustos.bestCase.calculations.batchOutput.regular}</div>
+                    <div class="text-purple-400">Thinking mode: ${labCustos.bestCase.calculations.batchOutput.thinking}</div>
+                    <div class="text-white">Total: ${labCustos.bestCase.calculations.batchOutput.total}</div>
+                    <div class="border-t border-slate-700 pt-2 mt-2 text-white font-bold">
+                      Custo Output Batch: ${labCustos.bestCase.calculations.batchOutputCost.calculation}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cache Storage -->
+                <div class="p-4 bg-green-900/30 rounded-lg border border-green-700">
+                  <h4 class="text-sm font-bold text-green-400 mb-2">Context Cache Storage</h4>
+                  <div class="space-y-1 text-sm font-mono">
+                    <div class="text-slate-400">Tokens: ${labCustos.bestCase.calculations.cacheStorage.tokens}</div>
+                    <div class="text-slate-400">Período: ${labCustos.bestCase.calculations.cacheStorage.hours}</div>
+                    <div class="border-t border-green-700 pt-2 mt-2 text-white font-bold">
+                      Custo Storage: ${labCustos.bestCase.calculations.cacheStorage.calculation}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Grounding -->
+                <div class="p-4 bg-amber-900/30 rounded-lg border border-amber-700">
+                  <h4 class="text-sm font-bold text-amber-400 mb-2">Grounding</h4>
+                  <div class="space-y-1 text-sm font-mono">
+                    <div class="text-slate-400">${labCustos.bestCase.calculations.grounding.totalCalls}</div>
+                    <div class="text-green-400">${labCustos.bestCase.calculations.grounding.freeQuota}</div>
+                    <div class="border-t border-amber-700 pt-2 mt-2 text-white font-bold">
+                      Custo Grounding: ${labCustos.bestCase.calculations.grounding.cost}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Total -->
+                <div class="p-5 bg-green-600/20 rounded-lg border-2 border-green-500">
+                  <h4 class="text-lg font-bold text-white mb-3">Custo Total Mensal (Otimizado)</h4>
+                  <div class="grid grid-cols-2 gap-3 text-sm mb-3">
+                    <div class="p-2 bg-slate-900 rounded">
+                      <div class="text-xs text-slate-500">Input Real-time</div>
+                      <div class="text-white font-bold">${labCustos.bestCase.calculations.totalMonthly.inputRealtime}</div>
+                    </div>
+                    <div class="p-2 bg-slate-900 rounded">
+                      <div class="text-xs text-slate-500">Output Real-time</div>
+                      <div class="text-white font-bold">${labCustos.bestCase.calculations.totalMonthly.outputRealtime}</div>
+                    </div>
+                    <div class="p-2 bg-slate-900 rounded">
+                      <div class="text-xs text-slate-500">Input Batch</div>
+                      <div class="text-white font-bold">${labCustos.bestCase.calculations.totalMonthly.inputBatch}</div>
+                    </div>
+                    <div class="p-2 bg-slate-900 rounded">
+                      <div class="text-xs text-slate-500">Output Batch</div>
+                      <div class="text-white font-bold">${labCustos.bestCase.calculations.totalMonthly.outputBatch}</div>
+                    </div>
+                    <div class="p-2 bg-slate-900 rounded">
+                      <div class="text-xs text-slate-500">Cache Storage</div>
+                      <div class="text-white font-bold">${labCustos.bestCase.calculations.totalMonthly.cacheStorage}</div>
+                    </div>
+                    <div class="p-2 bg-slate-900 rounded">
+                      <div class="text-xs text-slate-500">Grounding</div>
+                      <div class="text-white font-bold">${labCustos.bestCase.calculations.totalMonthly.grounding}</div>
+                    </div>
+                  </div>
+                  <div class="text-center p-3 bg-green-600 rounded-lg">
+                    <div class="text-3xl font-black text-white">${labCustos.bestCase.calculations.totalMonthly.total}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cenário Não-Otimizado -->
+            <div class="mb-6">
+              <h3 class="text-xl font-bold text-red-400 mb-4">${labCustos.worstCase.title}</h3>
+
+              <div class="space-y-4">
+                <!-- 100% Real-time Input -->
+                <div class="p-4 bg-slate-900/70 rounded-lg">
+                  <h4 class="text-sm font-bold text-white mb-2">100% Real-time Input (2.500 análises)</h4>
+                  <div class="space-y-1 text-sm font-mono">
+                    <div class="text-slate-400">Texto: ${labCustos.worstCase.calculations.realtimeInput.text}</div>
+                    <div class="text-slate-400">PDFs: ${labCustos.worstCase.calculations.realtimeInput.pdfs}</div>
+                    <div class="text-slate-400">Imagens: ${labCustos.worstCase.calculations.realtimeInput.images}</div>
+                    <div class="text-red-400">Manual SEM cache: ${labCustos.worstCase.calculations.realtimeInput.manual}</div>
+                    <div class="border-t border-slate-700 pt-2 mt-2 text-white font-bold">
+                      Custo Input: ${labCustos.worstCase.calculations.realtimeInputCost.calculation}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Real-time Output -->
+                <div class="p-4 bg-slate-900/70 rounded-lg">
+                  <h4 class="text-sm font-bold text-white mb-2">Output (2.500 análises, verboso)</h4>
+                  <div class="space-y-1 text-sm font-mono">
+                    <div class="text-slate-400">Output regular: ${labCustos.worstCase.calculations.realtimeOutput.regular}</div>
+                    <div class="text-purple-400">Thinking mode: ${labCustos.worstCase.calculations.realtimeOutput.thinking}</div>
+                    <div class="text-white">Total: ${labCustos.worstCase.calculations.realtimeOutput.total}</div>
+                    <div class="border-t border-slate-700 pt-2 mt-2 text-white font-bold">
+                      Custo Output: ${labCustos.worstCase.calculations.realtimeOutputCost.calculation}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Grounding -->
+                <div class="p-4 bg-red-900/30 rounded-lg border border-red-700">
+                  <h4 class="text-sm font-bold text-red-400 mb-2">Grounding (PAGANDO TUDO)</h4>
+                  <div class="space-y-1 text-sm font-mono">
+                    <div class="text-slate-400">${labCustos.worstCase.calculations.grounding.totalCalls}</div>
+                    <div class="text-red-400">${labCustos.worstCase.calculations.grounding.freeQuota}</div>
+                    <div class="border-t border-red-700 pt-2 mt-2 text-white font-bold">
+                      Custo Grounding: ${labCustos.worstCase.calculations.grounding.cost}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Total -->
+                <div class="p-5 bg-red-600/20 rounded-lg border-2 border-red-500">
+                  <h4 class="text-lg font-bold text-white mb-3">Custo Total Mensal (Não-Otimizado)</h4>
+                  <div class="grid grid-cols-2 gap-3 text-sm mb-3">
+                    <div class="p-2 bg-slate-900 rounded">
+                      <div class="text-xs text-slate-500">Input</div>
+                      <div class="text-white font-bold">${labCustos.worstCase.calculations.totalMonthly.input}</div>
+                    </div>
+                    <div class="p-2 bg-slate-900 rounded">
+                      <div class="text-xs text-slate-500">Output</div>
+                      <div class="text-white font-bold">${labCustos.worstCase.calculations.totalMonthly.output}</div>
+                    </div>
+                    <div class="p-2 bg-slate-900 rounded col-span-2">
+                      <div class="text-xs text-slate-500">Grounding</div>
+                      <div class="text-white font-bold">${labCustos.worstCase.calculations.totalMonthly.grounding}</div>
+                    </div>
+                  </div>
+                  <div class="text-center p-3 bg-red-600 rounded-lg">
+                    <div class="text-3xl font-black text-white">${labCustos.worstCase.calculations.totalMonthly.total}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Comparação -->
+            <div class="p-6 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl text-center">
+              <h3 class="text-xl font-bold text-white mb-4">Economia com Otimizações</h3>
+              <div class="grid grid-cols-3 gap-4 mb-4">
+                <div>
+                  <div class="text-sm text-green-100 mb-1">Economia Mensal</div>
+                  <div class="text-3xl font-black text-white">${labCustos.comparison.savings}</div>
+                </div>
+                <div>
+                  <div class="text-sm text-green-100 mb-1">Economia %</div>
+                  <div class="text-3xl font-black text-white">${labCustos.comparison.savingsPercent}</div>
+                </div>
+                <div>
+                  <div class="text-sm text-green-100 mb-1">Economia Anual</div>
+                  <div class="text-3xl font-black text-white">${labCustos.comparison.annualSavings}</div>
+                </div>
+              </div>
+              <div class="text-sm text-green-100">
+                De ${labCustos.comparison.worstCase} para ${labCustos.comparison.bestCase} por mês
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderAdvancedOptimizations(optimizations) {
+        return `
+          <div class="card rounded-xl p-6 mb-6 bg-gradient-to-r from-purple-900/30 to-pink-900/30 border-2 border-purple-500">
+            <h2 class="text-2xl font-bold text-white mb-3">
+              <i class="fas fa-rocket text-purple-400 mr-2"></i>Otimizações Avançadas PLUS
+            </h2>
+            <p class="text-slate-300 mb-6">Técnicas arquiteturais que vão além do óbvio e podem economizar centenas de dólares adicionais por mês.</p>
+
+            <div class="space-y-6">
+              ${optimizations
+                .map(
+                  (opt) => `
+                <div class="card rounded-lg p-5 bg-slate-900/50 border-l-4 border-${opt.color}-500">
+                  <div class="flex items-start gap-4 mb-4">
+                    <div class="w-12 h-12 bg-${opt.color}-600 rounded-lg flex items-center justify-center text-white text-xl flex-shrink-0">
+                      <i class="fas fa-${opt.icon}"></i>
+                    </div>
+                    <div class="flex-1">
+                      <h3 class="text-xl font-bold text-white mb-2">${opt.id}. ${opt.name}</h3>
+                      ${opt.difficulty ? `<span class="px-2 py-1 bg-slate-800 text-slate-400 text-xs rounded">Dificuldade: ${opt.difficulty}</span>` : ""}
+                    </div>
+                  </div>
+
+                  <div class="space-y-4">
+                    <!-- Problema -->
+                    <div class="p-3 bg-red-900/20 rounded-lg border-l-2 border-red-500">
+                      <div class="text-xs font-bold text-red-400 uppercase mb-1">Problema</div>
+                      <div class="text-sm text-slate-300">${opt.problem}</div>
+                    </div>
+
+                    <!-- Solução -->
+                    <div class="p-3 bg-green-900/20 rounded-lg border-l-2 border-green-500">
+                      <div class="text-xs font-bold text-green-400 uppercase mb-1">Solução</div>
+                      <div class="text-sm text-slate-300">${opt.solution}</div>
+                    </div>
+
+                    ${
+                      opt.implementation
+                        ? `
+                      <div class="p-4 bg-slate-800/50 rounded-lg">
+                        <div class="text-xs font-bold text-cyan-400 uppercase mb-2">Implementação</div>
+                        ${
+                          opt.implementation.code
+                            ? `
+                          <div class="relative mb-3">
+                            <button onclick="copyCode(this)" class="absolute top-2 right-2 px-2 py-1 bg-cyan-600 hover:bg-cyan-500 text-white text-xs rounded transition-colors z-10">
+                              <i class="fas fa-copy mr-1"></i>Copiar
+                            </button>
+                            <pre class="p-4 bg-slate-900 rounded-lg border border-slate-700 overflow-x-auto text-xs text-cyan-400 whitespace-pre-wrap">${opt.implementation.code}</pre>
+                          </div>
+                        `
+                            : ""
+                        }
+                        ${
+                          opt.implementation.explanation
+                            ? `
+                          <div class="text-xs text-slate-400 italic">${opt.implementation.explanation}</div>
+                        `
+                            : ""
+                        }
+                        ${
+                          opt.implementation.architecture
+                            ? `
+                          <pre class="text-xs text-slate-300 whitespace-pre-wrap">${opt.implementation.architecture}</pre>
+                        `
+                            : ""
+                        }
+                      </div>
+                    `
+                        : ""
+                    }
+
+                    <!-- Economia -->
+                    ${
+                      opt.savings
+                        ? `
+                      <div class="p-4 bg-${opt.color}-600/20 rounded-lg border border-${opt.color}-700">
+                        <div class="text-xs font-bold text-${opt.color}-400 uppercase mb-2">Economia</div>
+                        <div class="grid grid-cols-2 gap-3">
+                          ${
+                            opt.savings.monthly
+                              ? `
+                            <div>
+                              <div class="text-xs text-slate-500">Mensal</div>
+                              <div class="text-lg font-bold text-${opt.color}-400">${opt.savings.monthly}</div>
+                            </div>
+                          `
+                              : ""
+                          }
+                          ${
+                            opt.savings.annual
+                              ? `
+                            <div>
+                              <div class="text-xs text-slate-500">Anual</div>
+                              <div class="text-lg font-bold text-${opt.color}-400">${opt.savings.annual}</div>
+                            </div>
+                          `
+                              : ""
+                          }
+                        </div>
+                        ${
+                          opt.savings.calculation
+                            ? `
+                          <div class="text-xs text-slate-400 mt-2 font-mono">${opt.savings.calculation}</div>
+                        `
+                            : ""
+                        }
+                        ${
+                          opt.savings.breakdown
+                            ? `
+                          <div class="text-xs text-slate-400 mt-2">${opt.savings.breakdown}</div>
+                        `
+                            : ""
+                        }
+                      </div>
+                    `
+                        : ""
+                    }
+
+                    <!-- Bonus -->
+                    ${
+                      opt.bonus &&
+                      Array.isArray(opt.bonus) &&
+                      opt.bonus.length > 0
+                        ? `
+                      <div class="p-3 bg-amber-900/20 rounded-lg">
+                        <div class="text-xs font-bold text-amber-400 uppercase mb-2">Bônus</div>
+                        <ul class="space-y-1">
+                          ${opt.bonus
+                            .map(
+                              (b) => `
+                            <li class="text-sm text-slate-300 flex items-start gap-2">
+                              <i class="fas fa-star text-amber-400 mt-1"></i>
+                              <span>${b}</span>
+                            </li>
+                          `,
+                            )
+                            .join("")}
+                        </ul>
+                      </div>
+                    `
+                        : ""
+                    }
+
+                    <!-- Trade-offs -->
+                    ${
+                      opt.tradeoffs &&
+                      Array.isArray(opt.tradeoffs) &&
+                      opt.tradeoffs.length > 0
+                        ? `
+                      <div class="p-3 bg-slate-800/50 rounded-lg">
+                        <div class="text-xs font-bold text-slate-400 uppercase mb-2">Trade-offs</div>
+                        <ul class="space-y-1">
+                          ${opt.tradeoffs
+                            .map(
+                              (t) => `
+                            <li class="text-xs text-slate-400 flex items-start gap-2">
+                              <i class="fas fa-exclamation-triangle text-amber-500 mt-1"></i>
+                              <span>${t}</span>
+                            </li>
+                          `,
+                            )
+                            .join("")}
+                        </ul>
+                      </div>
+                    `
+                        : ""
+                    }
+
+                    <!-- Quando usar -->
+                    ${
+                      opt.whenToUse
+                        ? `
+                      <div class="text-xs text-green-400 bg-green-900/20 p-2 rounded">
+                        <i class="fas fa-lightbulb mr-1"></i> ${opt.whenToUse}
+                      </div>
+                    `
+                        : ""
+                    }
+
+                    <!-- Quando NÃO usar -->
+                    ${
+                      opt.whenNotToDo &&
+                      Array.isArray(opt.whenNotToDo) &&
+                      opt.whenNotToDo.length > 0
+                        ? `
+                      <div class="p-3 bg-red-900/20 rounded-lg">
+                        <div class="text-xs font-bold text-red-400 uppercase mb-2">Quando NÃO usar</div>
+                        <ul class="space-y-1">
+                          ${opt.whenNotToDo
+                            .map(
+                              (w) => `
+                            <li class="text-xs text-slate-300">• ${w}</li>
+                          `,
+                            )
+                            .join("")}
+                        </ul>
+                      </div>
+                    `
+                        : ""
+                    }
+
+                    <!-- Aplicável a -->
+                    ${
+                      opt.applicableTo &&
+                      Array.isArray(opt.applicableTo) &&
+                      opt.applicableTo.length > 0
+                        ? `
+                      <div class="flex flex-wrap gap-2">
+                        ${opt.applicableTo
+                          .map(
+                            (item) => `
+                          <span class="px-2 py-1 bg-${opt.color}-600/20 text-${opt.color}-400 text-xs rounded">${item}</span>
+                        `,
+                          )
+                          .join("")}
+                      </div>
+                    `
+                        : ""
+                    }
+
+                    <!-- Critérios Pro -->
+                    ${
+                      opt.criteriaForPro &&
+                      Array.isArray(opt.criteriaForPro) &&
+                      opt.criteriaForPro.length > 0
+                        ? `
+                      <div class="p-3 bg-indigo-900/20 rounded-lg">
+                        <div class="text-xs font-bold text-indigo-400 uppercase mb-2">Critérios para Pro Model</div>
+                        <ul class="space-y-1">
+                          ${opt.criteriaForPro
+                            .map(
+                              (c) => `
+                            <li class="text-xs text-slate-300">• ${c}</li>
+                          `,
+                            )
+                            .join("")}
+                        </ul>
+                      </div>
+                    `
+                        : ""
+                    }
+
+                    <!-- Critérios Thinking -->
+                    ${
+                      opt.criteriaForThinking &&
+                      Array.isArray(opt.criteriaForThinking) &&
+                      opt.criteriaForThinking.length > 0
+                        ? `
+                      <div class="p-3 bg-purple-900/20 rounded-lg">
+                        <div class="text-xs font-bold text-purple-400 uppercase mb-2">Critérios para Thinking Mode</div>
+                        <ul class="space-y-1">
+                          ${opt.criteriaForThinking
+                            .map(
+                              (c) => `
+                            <li class="text-xs text-slate-300">• ${c}</li>
+                          `,
+                            )
+                            .join("")}
+                        </ul>
+                      </div>
+                    `
+                        : ""
+                    }
+
+                    <!-- Guidelines -->
+                    ${
+                      opt.guidelines &&
+                      Array.isArray(opt.guidelines) &&
+                      opt.guidelines.length > 0
+                        ? `
+                      <div class="p-3 bg-cyan-900/20 rounded-lg">
+                        <div class="text-xs font-bold text-cyan-400 uppercase mb-2">Guidelines</div>
+                        <ul class="space-y-1">
+                          ${opt.guidelines
+                            .map(
+                              (g) => `
+                            <li class="text-xs text-slate-300">• ${g}</li>
+                          `,
+                            )
+                            .join("")}
+                        </ul>
+                      </div>
+                    `
+                        : ""
+                    }
+
+                    <!-- Técnicas -->
+                    ${
+                      opt.techniques &&
+                      Array.isArray(opt.techniques) &&
+                      opt.techniques.length > 0
+                        ? `
+                      <div class="p-3 bg-blue-900/20 rounded-lg">
+                        <div class="text-xs font-bold text-blue-400 uppercase mb-2">Técnicas</div>
+                        <ul class="space-y-1">
+                          ${opt.techniques
+                            .map(
+                              (t) => `
+                            <li class="text-xs text-slate-300">• ${t}</li>
+                          `,
+                            )
+                            .join("")}
+                        </ul>
+                      </div>
+                    `
+                        : ""
+                    }
+
+                    <!-- Impacto -->
+                    ${
+                      opt.impact
+                        ? `
+                      <div class="text-xs text-purple-400 bg-purple-900/20 p-2 rounded font-semibold">
+                        <i class="fas fa-bolt mr-1"></i> Impacto: ${opt.impact}
+                      </div>
+                    `
+                        : ""
+                    }
+                  </div>
+                </div>
+              `,
+                )
+                .join("")}
+            </div>
+
+            <!-- Pergunta Final -->
+            <div class="mt-6 p-5 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl">
+              <h3 class="text-xl font-bold text-white mb-3">
+                <i class="fas fa-users mr-2"></i>Discussão em Grupo
+              </h3>
+              <p class="text-white text-lg mb-4">"Se você pudesse implementar APENAS 3 otimizações, quais escolheria e por quê? Calcule o ROI de cada uma."</p>
+              <div class="p-4 bg-white/10 rounded-lg">
+                <div class="text-sm text-white">Considere:</div>
+                <ul class="text-sm text-white/90 space-y-1 mt-2">
+                  <li>• Economia absoluta ($)</li>
+                  <li>• Dificuldade de implementação</li>
+                  <li>• Tempo para implementar</li>
+                  <li>• Risco/complexidade de manutenção</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderDiscussionLabCustos(discussionPoints, commonMistakes) {
+        return `
+          <div class="card rounded-xl p-6 bg-gradient-to-r from-indigo-900/30 to-blue-900/30">
+            <h2 class="text-2xl font-bold text-white mb-6">
+              <i class="fas fa-comments text-indigo-400 mr-2"></i>Pontos de Discussão
+            </h2>
+
+            <div class="space-y-4 mb-8">
+              ${discussionPoints
+                .map(
+                  (point, idx) => `
+                <div class="p-4 bg-slate-900/50 rounded-lg">
+                  <div class="flex items-start gap-3 mb-2">
+                    <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                      ${idx + 1}
+                    </div>
+                    <div class="flex-1">
+                      <h4 class="text-white font-bold mb-2">${point.question}</h4>
+                      <p class="text-slate-300 text-sm">${point.answer}</p>
+                    </div>
+                  </div>
+                </div>
+              `,
+                )
+                .join("")}
+            </div>
+
+            <h3 class="text-xl font-bold text-white mb-4">
+              <i class="fas fa-exclamation-triangle text-amber-400 mr-2"></i>Armadilhas Comuns
+            </h3>
+
+            <div class="space-y-3">
+              ${commonMistakes
+                .map(
+                  (mistake) => `
+                <div class="p-4 bg-red-900/20 rounded-lg border-l-4 border-red-500">
+                  <div class="flex items-start gap-3">
+                    <i class="fas fa-times-circle text-red-400 mt-1"></i>
+                    <div class="flex-1">
+                      <h5 class="text-red-400 font-bold text-sm mb-1">${mistake.mistake}</h5>
+                      <p class="text-slate-300 text-sm">${mistake.why}</p>
+                    </div>
+                  </div>
+                </div>
+              `,
+                )
+                .join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderLabCustos() {
+        const container = document.getElementById("main-content");
+        container.innerHTML = `
+          <div class="space-y-6">
+            <!-- Header -->
+            <div class="mb-8">
+              <h1 class="text-4xl font-black text-white mb-3">
+                <i class="fas fa-calculator text-amber-400 mr-3"></i>${labCustos.title}
+              </h1>
+              <p class="text-xl text-slate-400">${labCustos.subtitle}</p>
+            </div>
+
+            <!-- Contexto do Problema -->
+            <div class="card rounded-xl p-6 mb-6 bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border-l-4 border-blue-500">
+              <h2 class="text-2xl font-bold text-white mb-4">
+                <i class="fas fa-briefcase text-blue-400 mr-2"></i>Contexto do Problema
+              </h2>
+
+              <div class="mb-6">
+                <h3 class="text-lg font-bold text-white mb-2">${labCustos.scenario.name}</h3>
+                <p class="text-slate-300 mb-4">${labCustos.scenario.description}</p>
+              </div>
+
+              <div class="p-5 bg-slate-900/70 rounded-lg mb-4">
+                <div class="flex items-start gap-4">
+                  <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
+                    CS
+                  </div>
+                  <div class="flex-1">
+                    <h4 class="text-lg font-bold text-white mb-1">${labCustos.scenario.persona.name}</h4>
+                    <p class="text-blue-400 text-sm mb-3">${labCustos.scenario.persona.role}</p>
+                    <p class="text-slate-300 text-sm leading-relaxed">${labCustos.scenario.persona.challenge}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                ${labCustos.scenario.objectives
+                  .map(
+                    (obj, idx) => `
+                  <div class="p-3 bg-blue-900/30 rounded-lg flex items-start gap-2">
+                    <div class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                      ${idx + 1}
+                    </div>
+                    <span class="text-sm text-slate-300">${obj}</span>
+                  </div>
+                `,
+                  )
+                  .join("")}
+              </div>
+            </div>
+
+            <!-- Dados Fornecidos -->
+            <div class="card rounded-xl p-6 mb-6">
+              <h2 class="text-2xl font-bold text-white mb-4">
+                <i class="fas fa-database text-purple-400 mr-2"></i>Dados Fornecidos para Cálculo
+              </h2>
+
+              <!-- Volume Mensal -->
+              <div class="mb-6">
+                <h3 class="text-lg font-bold text-white mb-3">Volume Mensal de Análises</h3>
+                <div class="grid grid-cols-4 gap-4">
+                  <div class="p-4 bg-slate-800/50 rounded-lg text-center">
+                    <div class="text-3xl font-bold text-purple-400 mb-1">${labCustos.volumeData.monthlyAnalyses.toLocaleString()}</div>
+                    <div class="text-xs text-slate-500">Total/mês</div>
+                  </div>
+                  <div class="p-4 bg-green-900/30 rounded-lg text-center border border-green-700">
+                    <div class="text-3xl font-bold text-green-400 mb-1">${labCustos.volumeData.realtimeCount.toLocaleString()}</div>
+                    <div class="text-xs text-slate-500">Real-time (${labCustos.volumeData.realtimePercent}%)</div>
+                  </div>
+                  <div class="p-4 bg-blue-900/30 rounded-lg text-center border border-blue-700">
+                    <div class="text-3xl font-bold text-blue-400 mb-1">${labCustos.volumeData.batchCount.toLocaleString()}</div>
+                    <div class="text-xs text-slate-500">Batch (${labCustos.volumeData.batchPercent}%)</div>
+                  </div>
+                  <div class="p-4 bg-slate-800/50 rounded-lg text-center">
+                    <div class="text-3xl font-bold text-cyan-400 mb-1">${labCustos.volumeData.analysesPerDay}</div>
+                    <div class="text-xs text-slate-500">Por dia útil</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Composição de Tokens (Real-time) -->
+              <div class="mb-6">
+                <h3 class="text-lg font-bold text-white mb-3">Composição de Tokens por Análise (Real-time)</h3>
+
+                <div class="space-y-3">
+                  <!-- Input Texto -->
+                  <div class="p-4 bg-slate-900 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="flex items-center gap-3">
+                        <i class="fas fa-font text-slate-400"></i>
+                        <span class="text-white font-bold">Input Texto</span>
+                      </div>
+                      <span class="text-cyan-400 font-bold">${labCustos.tokenBreakdown.realtime.inputText.value.toLocaleString()} tokens</span>
+                    </div>
+                    <p class="text-xs text-slate-500">${labCustos.tokenBreakdown.realtime.inputText.description}</p>
+                  </div>
+
+                  <!-- Input PDFs -->
+                  <div class="p-4 bg-slate-900 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="flex items-center gap-3">
+                        <i class="fas fa-file-pdf text-red-400"></i>
+                        <span class="text-white font-bold">Input PDFs (Multi-modal)</span>
+                      </div>
+                      <span class="text-red-400 font-bold">${labCustos.tokenBreakdown.realtime.inputPDFs.total.toLocaleString()} tokens</span>
+                    </div>
+                    <div class="text-xs text-slate-500 space-y-1">
+                      <div>• ${labCustos.tokenBreakdown.realtime.inputPDFs.count} documentos × ${labCustos.tokenBreakdown.realtime.inputPDFs.tokensEach.toLocaleString()} tokens cada</div>
+                      <div>• Arquivos: ${labCustos.tokenBreakdown.realtime.inputPDFs.files.join(", ")}</div>
+                    </div>
+                  </div>
+
+                  <!-- Input Imagens -->
+                  <div class="p-4 bg-slate-900 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="flex items-center gap-3">
+                        <i class="fas fa-image text-pink-400"></i>
+                        <span class="text-white font-bold">Input Imagens (Multi-modal)</span>
+                      </div>
+                      <span class="text-pink-400 font-bold">${labCustos.tokenBreakdown.realtime.inputImages.total.toLocaleString()} tokens</span>
+                    </div>
+                    <div class="text-xs text-slate-500">
+                      • ${labCustos.tokenBreakdown.realtime.inputImages.count} fotos × ${labCustos.tokenBreakdown.realtime.inputImages.tokensEach} tokens cada
+                      <br>• ${labCustos.tokenBreakdown.realtime.inputImages.description}
+                    </div>
+                  </div>
+
+                  <!-- Grounding -->
+                  <div class="p-4 bg-slate-900 rounded-lg border-l-4 border-amber-500">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="flex items-center gap-3">
+                        <i class="fas fa-search text-amber-400"></i>
+                        <span class="text-white font-bold">Grounding (Dados Externos)</span>
+                      </div>
+                      <span class="text-amber-400 font-bold">${labCustos.tokenBreakdown.realtime.grounding.callsPerAnalysis} consultas/análise</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                      ${labCustos.tokenBreakdown.realtime.grounding.types
+                        .map(
+                          (type) => `
+                        <div class="p-2 bg-slate-800 rounded">
+                          <div class="text-slate-300">${type.name}</div>
+                          <div class="text-amber-400 font-mono">${type.cost}</div>
+                        </div>
+                      `,
+                        )
+                        .join("")}
+                    </div>
+                    <div class="text-xs text-slate-500 mt-2">
+                      Total mensal: ${labCustos.tokenBreakdown.realtime.grounding.totalCallsMonth.toLocaleString()} calls
+                    </div>
+                  </div>
+
+                  <!-- Context Caching -->
+                  <div class="p-4 bg-green-900/30 rounded-lg border-l-4 border-green-500">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="flex items-center gap-3">
+                        <i class="fas fa-database text-green-400"></i>
+                        <span class="text-white font-bold">Context Caching</span>
+                      </div>
+                      <span class="text-green-400 font-bold">${labCustos.tokenBreakdown.realtime.cache.size.toLocaleString()} tokens</span>
+                    </div>
+                    <div class="text-xs text-slate-300 mb-2">${labCustos.tokenBreakdown.realtime.cache.description}</div>
+                    <div class="flex items-center gap-4 text-xs">
+                      <span class="px-2 py-1 bg-green-600/20 text-green-400 rounded">Reutilizado: ${labCustos.tokenBreakdown.realtime.cache.reused ? "Sim" : "Não"}</span>
+                      <span class="text-slate-500">TTL: ${labCustos.tokenBreakdown.realtime.cache.ttl}</span>
+                    </div>
+                  </div>
+
+                  <!-- Output -->
+                  <div class="p-4 bg-slate-900 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="flex items-center gap-3">
+                        <i class="fas fa-file-code text-blue-400"></i>
+                        <span class="text-white font-bold">Output (Structured)</span>
+                      </div>
+                      <span class="text-blue-400 font-bold">${labCustos.tokenBreakdown.realtime.output.value.toLocaleString()} tokens</span>
+                    </div>
+                    <p class="text-xs text-slate-500">${labCustos.tokenBreakdown.realtime.output.description}</p>
+                  </div>
+
+                  <!-- Thinking Mode -->
+                  <div class="p-4 bg-purple-900/30 rounded-lg border-l-4 border-purple-500">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="flex items-center gap-3">
+                        <i class="fas fa-brain text-purple-400"></i>
+                        <span class="text-white font-bold">Thinking Mode</span>
+                      </div>
+                      <span class="px-3 py-1 bg-purple-600/20 text-purple-400 text-sm font-bold rounded">ATIVO</span>
+                    </div>
+                    <p class="text-xs text-slate-300">${labCustos.tokenBreakdown.realtime.thinkingMode.reason}</p>
+                    <div class="text-xs text-amber-400 mt-2">
+                      <i class="fas fa-exclamation-triangle mr-1"></i>
+                      Output tokens são DUPLICADOS (output regular + thinking)
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Modelo -->
+              <div class="p-5 bg-gradient-to-r from-indigo-900/30 to-purple-900/30 rounded-lg border-l-4 border-indigo-500">
+                <h3 class="text-lg font-bold text-white mb-3">Modelo Recomendado</h3>
+                <div class="text-2xl font-bold text-indigo-400 mb-3">${labCustos.model.name}</div>
+                <div class="space-y-1">
+                  ${labCustos.model.reasons
+                    .map(
+                      (reason) => `
+                    <div class="text-sm text-slate-300 flex items-start gap-2">
+                      <i class="fas fa-check text-indigo-400 mt-1"></i>
+                      <span>${reason}</span>
+                    </div>
+                  `,
+                    )
+                    .join("")}
+                </div>
+              </div>
+            </div>
+
+            <!-- Desafio aos Alunos -->
+            <div class="card rounded-xl p-6 mb-6 bg-gradient-to-r from-amber-900/30 to-orange-900/30 border-2 border-amber-500">
+              <h2 class="text-2xl font-bold text-white mb-4">
+                <i class="fas fa-tasks text-amber-400 mr-2"></i>Seu Desafio
+              </h2>
+
+              <div class="p-4 bg-slate-900/70 rounded-lg mb-4">
+                <p class="text-slate-300 mb-3">Use a <strong>calculadora oficial do Google Cloud</strong> para estimar os custos mensais nos dois cenários:</p>
+                <a href="${labCustos.toolsAndLinks.calculator.url}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg transition-colors">
+                  <i class="fas fa-external-link-alt"></i>
+                  Abrir Google Cloud Pricing Calculator
+                </a>
+              </div>
+
+              <div class="grid grid-cols-2 gap-6 mb-6">
+                <!-- Melhor Cenário -->
+                <div class="p-5 bg-green-900/30 rounded-lg border-2 border-green-700">
+                  <h3 class="text-xl font-bold text-green-400 mb-3">
+                    <i class="fas fa-thumbs-up mr-2"></i>Cenário Otimizado
+                  </h3>
+                  <div class="space-y-2 mb-4">
+                    ${labCustos.bestCase.assumptions
+                      .map(
+                        (assumption) => `
+                      <div class="text-sm text-slate-300 flex items-start gap-2">
+                        <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                        <span>${assumption}</span>
+                      </div>
+                    `,
+                      )
+                      .join("")}
+                  </div>
+                  <div class="p-3 bg-slate-900 rounded">
+                    <div class="text-xs text-slate-500 mb-1">Sua estimativa:</div>
+                    <div class="text-2xl font-bold text-green-400">$ _____ / mês</div>
+                  </div>
+                </div>
+
+                <!-- Pior Cenário -->
+                <div class="p-5 bg-red-900/30 rounded-lg border-2 border-red-700">
+                  <h3 class="text-xl font-bold text-red-400 mb-3">
+                    <i class="fas fa-thumbs-down mr-2"></i>Cenário Não-Otimizado
+                  </h3>
+                  <div class="space-y-2 mb-4">
+                    ${labCustos.worstCase.assumptions
+                      .map(
+                        (assumption) => `
+                      <div class="text-sm text-slate-300 flex items-start gap-2">
+                        <i class="fas fa-times-circle text-red-400 mt-1"></i>
+                        <span>${assumption}</span>
+                      </div>
+                    `,
+                      )
+                      .join("")}
+                  </div>
+                  <div class="p-3 bg-slate-900 rounded">
+                    <div class="text-xs text-slate-500 mb-1">Sua estimativa:</div>
+                    <div class="text-2xl font-bold text-red-400">$ _____ / mês</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-4 bg-amber-600/20 rounded-lg border border-amber-500">
+                <h4 class="text-sm font-bold text-amber-400 mb-2">Análise Comparativa</h4>
+                <div class="grid grid-cols-3 gap-3 text-sm">
+                  <div class="p-2 bg-slate-900 rounded">
+                    <div class="text-xs text-slate-500">Economia Absoluta</div>
+                    <div class="text-white font-bold">$ _____</div>
+                  </div>
+                  <div class="p-2 bg-slate-900 rounded">
+                    <div class="text-xs text-slate-500">Economia %</div>
+                    <div class="text-white font-bold">____%</div>
+                  </div>
+                  <div class="p-2 bg-slate-900 rounded">
+                    <div class="text-xs text-slate-500">Economia Anual</div>
+                    <div class="text-white font-bold">$ _____</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botão Ver Gabarito -->
+            <div class="text-center mb-6">
+              <button
+                onclick="document.getElementById('gabarito-section').classList.toggle('hidden')"
+                class="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-lg transition-all transform hover:scale-105"
+              >
+                <i class="fas fa-eye mr-2"></i>Ver Gabarito e Discussão
+              </button>
+            </div>
+
+            <!-- Gabarito (inicialmente oculto) -->
+            <div id="gabarito-section" class="hidden space-y-6">
+              ${renderGabaritoLabCustos(labCustos)}
+              ${renderAdvancedOptimizations(labCustos.advancedOptimizations)}
+              ${renderDiscussionLabCustos(labCustos.discussionPoints, labCustos.commonMistakes)}
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-8 text-center text-slate-500 text-sm">
+              <p>
+                <i class="fas fa-graduation-cap mr-2"></i> FIAP - Agentes Avançados de IA
+              </p>
+              <p class="mt-1">
+                Módulo 01 - Economia dos Tokens
+              </p>
+            </div>
+          </div>
+        `;
+      }
+
+      // ==================== INIT ====================
+      document.addEventListener("DOMContentLoaded", () => {
+        renderLabCustos();
+      });
+    </script>
+  </body>
+</html>

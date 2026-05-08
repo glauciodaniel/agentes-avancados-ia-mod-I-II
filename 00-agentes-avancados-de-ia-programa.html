@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Engenharia de Agentes Corporativos - Hub do Curso</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Chosen Palette: Corporate Slate & Votorantim Blue -->
+    <!-- Application Structure Plan: 
+         1. Dashboard: Visão executiva de 129h e 43 sessões.
+         2. Módulo 1 & 2 (Prof. Glaucio): Exibição detalhada de cronograma aula a aula (8 e 11 sessões).
+         3. Módulo 3 & 4 (Prof. Ioannis): Exibição em formato de ementa consolidada/tópicos, sem divisão de aulas.
+         4. Recursos de Apoio: Anatomia do Agente e Simulador FinOps.
+         Por que: Essa estrutura respeita a autonomia didática de cada professor, permitindo que o aluno veja o "passo a passo" do Prof. Glaucio e o "roadmap estratégico" do Prof. Ioannis.
+    -->
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8fafc;
+        color: #1e293b;
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      .lesson-card {
+        transition: all 0.2s ease;
+        border-left: 4px solid #e2e8f0;
+      }
+      .lesson-card:hover {
+        border-left-color: #3b82f6;
+        background-color: #f1f5f9;
+        transform: translateX(4px);
+      }
+
+      .topic-pill {
+        display: inline-block;
+        background-color: #f1f5f9;
+        color: #475569;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 6px;
+        margin-bottom: 4px;
+        margin-right: 4px;
+      }
+
+      .instructor-tag {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        padding: 2px 10px;
+        border-radius: 999px;
+        letter-spacing: 0.025em;
+      }
+
+      .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        height: 300px;
+        max-height: 350px;
+      }
+    </style>
+  </head>
+  <body class="flex flex-col h-screen overflow-hidden">
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 shadow-sm z-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <div
+              class="flex-shrink-0 flex items-center gap-3 cursor-pointer"
+              onclick="navigate('dashboard')"
+            >
+              <div
+                class="w-10 h-10 bg-blue-700 rounded-lg flex items-center justify-center text-white font-bold text-xl"
+              >
+                <i class="fa-solid fa-microchip"></i>
+              </div>
+              <div>
+                <h1 class="text-xl font-bold text-slate-900 tracking-tight">
+                  Agent Engineering
+                </h1>
+                <p
+                  class="text-[10px] text-slate-500 font-bold uppercase tracking-widest"
+                >
+                  Especialista BV - Professional Hub
+                </p>
+              </div>
+            </div>
+          </div>
+          <nav class="hidden md:flex space-x-6 items-center" id="nav-menu">
+            <!-- Nav items -->
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+      <!-- Sidebar -->
+      <aside
+        class="hidden md:flex flex-col w-72 bg-slate-50 border-r border-slate-200 overflow-y-auto"
+      >
+        <div class="p-6">
+          <h3
+            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6"
+          >
+            Módulos do Curso
+          </h3>
+          <div class="space-y-3" id="module-nav">
+            <!-- Module list injected by JS -->
+          </div>
+        </div>
+
+        <div class="mt-auto p-6 border-t border-slate-200 bg-white">
+          <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-4">
+            Equipe Docente
+          </h4>
+          <div class="space-y-4">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-10 h-10 rounded-full bg-blue-700 flex items-center justify-center text-white text-xs font-bold"
+              >
+                GD
+              </div>
+              <div>
+                <p class="text-xs font-bold text-slate-900 leading-none">
+                  Prof. Glaucio Daniel
+                </p>
+                <p class="text-[10px] text-slate-500 mt-1">
+                  Módulos 1 e 2 (56h)
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div
+                class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 text-xs font-bold"
+              >
+                PI
+              </div>
+              <div>
+                <p class="text-xs font-bold text-slate-900 leading-none">
+                  Prof. Ioannis
+                </p>
+                <p class="text-[10px] text-slate-500 mt-1">
+                  Módulos 3 e 4 (72h)
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main
+        class="flex-1 overflow-y-auto bg-slate-50/50 p-4 sm:p-10"
+        id="main-container"
+      >
+        <!-- Content -->
+      </main>
+    </div>
+
+    <script>
+      // --- Data ---
+      const courseData = {
+        meta: { totalHours: 129, sessions: 43 },
+        modules: [
+          {
+            id: 1,
+            title: "Fundamentos & FinOps",
+            hours: 24,
+            instructor: "Prof. Glaucio Daniel",
+            type: "lessons",
+            description:
+              "Consolidação técnica, arquiteturas de agentes e controle rígido de custos.",
+            content: [
+              {
+                id: 1,
+                title: "O Ecossistema ADK & A Economia dos Tokens",
+                obj: "Inicializar projeto padronizado e monitorar custos em tempo real.",
+                problem:
+                  "Scripts inauditáveis e desperdício financeiro invisível.",
+              },
+              {
+                id: 2,
+                title: "Engenharia de Prompt & Intenção Segura",
+                obj: "Classificar intenção do usuário e bloquear engenharia social.",
+                problem: "Agentes vulneráveis a injeção de prompt.",
+              },
+              {
+                id: 3,
+                title: "Output Estruturado (JSON) & Integração",
+                obj: "Garantir retornos validados via Pydantic para bancos SQL.",
+                problem: "Respostas conversacionais quebram automações.",
+              },
+              {
+                id: 4,
+                title: "Memória Eficiente & Gestão de Contexto",
+                obj: "Implementar janela deslizante e resumização progressiva.",
+                problem: "Estouro de tokens e ContextWindowExceeded.",
+              },
+              {
+                id: 5,
+                title: "RAG I - Ingestão e Embeddings (Gecko)",
+                obj: "Assistente de normas internas citando fontes exatas.",
+                problem: "Alucinação de regras bancárias inexistentes.",
+              },
+              {
+                id: 6,
+                title: "RAG II - Tagamento e Controle (RBAC)",
+                obj: "Busca baseada no cargo do usuário usando metadados.",
+                problem: "Vazamento de documentos confidenciais no RAG.",
+              },
+              {
+                id: 7,
+                title: "Cache Semântico & Estratégias",
+                obj: "Reduzir latência e custo em perguntas recorrentes.",
+                problem: "Custo repetitivo para perguntas redundantes.",
+              },
+              {
+                id: 8,
+                title: "Capstone M1: O Agente Auditor Jr.",
+                obj: "Construção de agente auditor de propostas (PDF/JSON).",
+                problem: "Desafio prático de integração total dos fundamentos.",
+              },
+            ],
+          },
+          {
+            id: 2,
+            title: "Orquestração e Integração",
+            hours: 32,
+            instructor: "Prof. Glaucio Daniel",
+            type: "lessons",
+            description:
+              "Sair de scripts lineares para agentes autônomos que tomam decisões e usam ferramentas.",
+            content: [
+              {
+                id: 9,
+                title: "Integrando LangGraph ao ADK",
+                obj: "Criar fluxos de auto-correção via Grafos.",
+                problem:
+                  "Lógica linear vira Spaghetti Code em processos complexos.",
+              },
+              {
+                id: 10,
+                title: "Tool Calling Avançado",
+                obj: "O agente decide autonomamente quando usar APIs ou Calculadora.",
+                problem:
+                  "LLM falha em cálculos ou inventa dados que deveriam vir de sistemas.",
+              },
+              {
+                id: 11,
+                title: "Roteamento Inteligente (Adaptive Compute)",
+                obj: "Direcionar fluxos simples para Flash e complexos para Pro.",
+                problem: "Uso de modelos caros para tarefas triviais.",
+              },
+              {
+                id: 12,
+                title: "Comunicação Agent-to-Agent (A2A)",
+                obj: "Transferência transparente entre agentes especialistas.",
+                problem: "Agentes monolíticos alucinam por excesso de escopo.",
+              },
+              {
+                id: 13,
+                title: "Human-in-the-Loop",
+                obj: "Pausa para aprovação crítica em transferências bancárias.",
+                problem:
+                  "Risco operacional em decisões autônomas de alto risco.",
+              },
+              {
+                id: 14,
+                title: "Guardrails I: Model Armor (Entrada)",
+                obj: "Bloquear Jailbreak e garantir tom de voz corporativo.",
+                problem:
+                  "Manipulação do agente para ser tóxico ou revelar segredos.",
+              },
+              {
+                id: 15,
+                title: "Guardrails II: Privacidade e PII",
+                obj: "Mascaramento local de CPF e Cartão antes da nuvem.",
+                problem: "Vioalção de LGPD ao enviar dados sensíveis.",
+              },
+              {
+                id: 16,
+                title: "Observabilidade & Testes (Eval)",
+                obj: "Tracing da cadeia de pensamento e LLM-as-a-Judge.",
+                problem: "Agente 'Caixa Preta' dificulta debugging.",
+              },
+              {
+                id: 17,
+                title: "Deploy no Vertex AI Agent Engine",
+                obj: "Empacotar e realizar deploy serverless gerenciado.",
+                problem: "Dificuldade de escalar infraestrutura manualmente.",
+              },
+              {
+                id: 18,
+                title: "Hackathon: O Super Agente Bancário",
+                obj: "Sistema multiagente de aprovação de crédito.",
+                problem: "Síntese prática de todo o conhecimento orquestrado.",
+              },
+              {
+                id: 19,
+                title: "Code Review & Encerramento",
+                obj: "Análise crítica de segurança, FinOps e arquitetura.",
+                problem: "Ajustes finais para escala produtiva.",
+              },
+            ],
+          },
+          {
+            id: 3,
+            title: "Ecossistema Moderno",
+            hours: 40,
+            instructor: "Prof. Ioannis",
+            type: "syllabus",
+            description:
+              "Exploração de frameworks emergentes, segurança e conformidade cloud.",
+            content: [
+              {
+                category: "Frameworks & Protocolos",
+                items: [
+                  "MCP (Model Context Protocol)",
+                  "Google ADK Cloud Avançado",
+                  "Azure AI Foundry",
+                ],
+              },
+              {
+                category: "Segurança & Model Armor",
+                items: [
+                  "Filtros Prompt Injection",
+                  "Proteção de PII Avançada",
+                  "Políticas de Conformidade",
+                ],
+              },
+              {
+                category: "Copilotos Corporativos",
+                items: [
+                  "Clark AI + Superblocks",
+                  "Loveable + Cursor",
+                  "Integração SaaS",
+                ],
+              },
+              {
+                category: "Comparativo de Guardrails",
+                items: [
+                  "Vertex AI Model Armor",
+                  "AWS Bedrock Guardrails",
+                  "Meta Llama Guard",
+                  "Guardrails AI OSS",
+                ],
+              },
+            ],
+          },
+          {
+            id: 4,
+            title: "Arquitetura Multiagentes",
+            hours: 32,
+            instructor: "Prof. Ioannis",
+            type: "syllabus",
+            description:
+              "Projetos robustos de multiagentes complexos e análise de TCO em escala.",
+            content: [
+              {
+                category: "Sistemas Multiagente",
+                items: [
+                  "CrewAI Avançado",
+                  "Agentic AI Paradigms",
+                  "Coordenação de Papéis",
+                ],
+              },
+              {
+                category: "Contexto & Memória",
+                items: [
+                  "Compressão de Informações",
+                  "Resumos Dinâmicos",
+                  "Memória Híbrida (Vetor/Persistente)",
+                ],
+              },
+              {
+                category: "Observabilidade",
+                items: [
+                  "Tracing com LangSmith",
+                  "Tagamento Avançado de Logs",
+                  "Métricas de Performance",
+                ],
+              },
+              {
+                category: "FinOps & TCO",
+                items: [
+                  "Total Cost of Ownership",
+                  "Otimização de Cache",
+                  "Monitoramento por Usuário/Feature",
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      // --- State ---
+      let appState = { currentView: "dashboard", selectedModule: null };
+
+      // --- DOM ---
+      const mainContainer = document.getElementById("main-container");
+      const navMenu = document.getElementById("nav-menu");
+      const moduleNav = document.getElementById("module-nav");
+
+      function initNavigation() {
+        const views = [
+          { id: "dashboard", label: "Dashboard", icon: "fa-chart-pie" },
+          { id: "anatomy", label: "Anatomia", icon: "fa-network-wired" },
+          { id: "finops", label: "FinOps", icon: "fa-calculator" },
+        ];
+
+        navMenu.innerHTML = views
+          .map(
+            (v) => `
+                <button onclick="navigate('${v.id}')" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${appState.currentView === v.id ? "text-blue-700 bg-blue-50" : "text-slate-500 hover:text-slate-900"}">
+                    <i class="fa-solid ${v.icon} mr-2"></i>${v.label}
+                </button>
+            `,
+          )
+          .join("");
+
+        moduleNav.innerHTML = courseData.modules
+          .map(
+            (mod) => `
+                <button onclick="showModule(${mod.id})" class="w-full text-left p-4 rounded-xl text-xs transition-all border-2 ${appState.selectedModule === mod.id ? "border-blue-600 bg-white shadow-md" : "border-transparent hover:bg-white hover:border-slate-200"}">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-black text-slate-900 uppercase">Módulo ${mod.id}</span>
+                        <span class="text-[10px] font-bold ${mod.instructor.includes("Glaucio") ? "text-blue-600" : "text-slate-400"}">${mod.hours}h</span>
+                    </div>
+                    <span class="text-[10px] text-slate-500 font-medium block truncate">${mod.title}</span>
+                </button>
+            `,
+          )
+          .join("");
+      }
+
+      function navigate(viewId) {
+        appState.currentView = viewId;
+        appState.selectedModule = null;
+        initNavigation();
+        renderContent();
+      }
+
+      function showModule(id) {
+        appState.currentView = "module";
+        appState.selectedModule = id;
+        initNavigation();
+        renderModuleDetail(id);
+      }
+
+      function renderContent() {
+        mainContainer.innerHTML = "";
+        switch (appState.currentView) {
+          case "dashboard":
+            renderDashboard();
+            break;
+          case "anatomy":
+            renderAnatomy();
+            break;
+          case "finops":
+            renderFinOps();
+            break;
+        }
+      }
+
+      // --- View Renderers ---
+
+      function renderDashboard() {
+        const html = `
+                <div class="space-y-8 animate-fade-in">
+                    <div class="bg-white rounded-3xl p-10 border border-slate-200 shadow-sm relative overflow-hidden">
+                        <div class="relative z-10">
+                            <h2 class="text-4xl font-black text-slate-900 mb-3 tracking-tighter">Engenharia de Agentes</h2>
+                            <p class="text-slate-500 max-w-2xl text-lg font-medium leading-relaxed">Treinamento avançado BV: 129 horas de imersão técnica em orquestração, governança e economia de tokens.</p>
+                            <div class="flex gap-10 mt-8">
+                                <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Duração</span><span class="text-2xl font-black text-slate-900">129h</span></div>
+                                <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Encontros</span><span class="text-2xl font-black text-slate-900">43</span></div>
+                                <div class="flex flex-col"><span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Metodologia</span><span class="text-2xl font-black text-blue-700">PBL</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        ${courseData.modules
+                          .map(
+                            (mod) => `
+                            <div onclick="showModule(${mod.id})" class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm cursor-pointer hover:border-blue-400 transition-all group">
+                                <div class="flex justify-between items-start mb-4">
+                                    <span class="bg-slate-100 text-slate-500 text-[10px] font-black px-4 py-1.5 rounded-full tracking-widest uppercase">Módulo ${mod.id}</span>
+                                    <span class="instructor-tag ${mod.instructor.includes("Glaucio") ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-400"}">${mod.instructor}</span>
+                                </div>
+                                <h3 class="text-2xl font-black text-slate-900 mb-2 tracking-tight">${mod.title}</h3>
+                                <p class="text-slate-500 text-sm mb-6">${mod.description}</p>
+                                <div class="flex items-center justify-between border-t border-slate-100 pt-6">
+                                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">${mod.hours}h de carga</span>
+                                    <span class="text-blue-700 text-xs font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all">Ver Detalhes <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                                </div>
+                            </div>
+                        `,
+                          )
+                          .join("")}
+                    </div>
+                </div>
+            `;
+        mainContainer.innerHTML = html;
+      }
+
+      function renderModuleDetail(id) {
+        const mod = courseData.modules.find((m) => m.id === id);
+        let contentHtml = "";
+
+        if (mod.type === "lessons") {
+          // M1 e M2: Lista detalhada de aulas
+          contentHtml = `
+                    <div class="space-y-4">
+                        <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Cronograma de Aulas</h3>
+                        ${mod.content
+                          .map(
+                            (lesson) => `
+                            <div class="lesson-card bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                                <div class="flex flex-col lg:flex-row gap-6">
+                                    <div class="shrink-0">
+                                        <div class="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-300 font-black text-lg border border-slate-100">
+                                            ${lesson.id < 10 ? "0" + lesson.id : lesson.id}
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="text-lg font-black text-slate-900 mb-3 tracking-tight">${lesson.title}</h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div class="bg-slate-50 p-4 rounded-xl">
+                                                <p class="text-[10px] font-black text-blue-700 uppercase mb-2">Objetivo</p>
+                                                <p class="text-xs text-slate-600 leading-relaxed font-medium">${lesson.obj}</p>
+                                            </div>
+                                            <div class="bg-red-50/50 p-4 rounded-xl">
+                                                <p class="text-[10px] font-black text-red-700 uppercase mb-2">Problema</p>
+                                                <p class="text-xs text-slate-600 leading-relaxed font-medium">${lesson.problem}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `,
+                          )
+                          .join("")}
+                    </div>
+                `;
+        } else {
+          // M3 e M4: Ementa consolidada/tópicos
+          contentHtml = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        ${mod.content
+                          .map(
+                            (cat) => `
+                            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                                <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">${cat.category}</h4>
+                                <div class="flex flex-wrap">
+                                    ${cat.items.map((item) => `<span class="topic-pill">${item}</span>`).join("")}
+                                </div>
+                            </div>
+                        `,
+                          )
+                          .join("")}
+                        <div class="md:col-span-2 bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
+                            <h4 class="text-indigo-700 font-bold mb-2 text-sm uppercase">Objetivo Final</h4>
+                            <p class="text-slate-600 text-xs leading-relaxed font-medium">Projetar arquiteturas robustas de multiagentes complexos, aplicando engenharia de contexto avançada e observabilidade profunda com foco em TCO.</p>
+                        </div>
+                    </div>
+                `;
+        }
+
+        const html = `
+                <div class="space-y-8 animate-fade-in max-w-5xl">
+                    <div class="flex items-center gap-6">
+                        <button onclick="navigate('dashboard')" class="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all"><i class="fa-solid fa-arrow-left"></i></button>
+                        <div>
+                            <h2 class="text-3xl font-black text-slate-900 tracking-tighter">Módulo ${mod.id}: ${mod.title}</h2>
+                            <p class="text-slate-500 font-medium">${mod.instructor}</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 text-white rounded-3xl p-8 flex flex-col md:flex-row justify-between gap-6">
+                        <div class="flex-1">
+                            <h4 class="text-blue-400 text-[10px] font-black uppercase tracking-widest mb-2">Visão Estratégica</h4>
+                            <p class="text-lg font-medium leading-relaxed">${mod.description}</p>
+                        </div>
+                        <div class="shrink-0 flex gap-4">
+                            <div class="bg-white/10 px-6 py-4 rounded-2xl text-center border border-white/10">
+                                <span class="text-[10px] font-bold uppercase opacity-50 block mb-1">Carga</span>
+                                <span class="text-2xl font-black">${mod.hours}h</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${contentHtml}
+                </div>
+            `;
+        mainContainer.innerHTML = html;
+      }
+
+      function renderAnatomy() {
+        const html = `
+                <div class="space-y-8 animate-fade-in max-w-5xl">
+                    <div class="bg-white rounded-3xl p-10 border border-slate-200 shadow-sm">
+                        <h2 class="text-3xl font-black text-slate-900 mb-3 tracking-tighter">Anatomia do Agente</h2>
+                        <p class="text-slate-500 font-medium mb-10 text-lg">Arquitetura de sistemas reativos e deliberativos (BDI) no ecossistema Google Cloud.</p>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                            <div class="bg-slate-900 rounded-[40px] p-16 aspect-square flex items-center justify-center relative shadow-2xl">
+                                <div class="w-24 h-24 bg-blue-700 rounded-3xl flex items-center justify-center text-white text-3xl shadow-2xl animate-pulse">
+                                    <i class="fa-solid fa-brain"></i>
+                                </div>
+                                <div class="absolute inset-0 border-[30px] border-slate-800 rounded-full opacity-10"></div>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="p-6 bg-white rounded-2xl border border-slate-200">
+                                    <h4 class="font-black text-slate-900 mb-1 uppercase text-xs tracking-widest">Brain (Reasoning Engine)</h4>
+                                    <p class="text-xs text-slate-500 leading-relaxed">Gemini 1.5 executando padrões ReAct e planejamento deliberativo.</p>
+                                </div>
+                                <div class="p-6 bg-white rounded-2xl border border-slate-200">
+                                    <h4 class="font-black text-slate-900 mb-1 uppercase text-xs tracking-widest">Nervous System (Orchestration)</h4>
+                                    <p class="text-xs text-slate-500 leading-relaxed">LangGraph gerenciando estados imutáveis e loops de auto-correção.</p>
+                                </div>
+                                <div class="p-6 bg-white rounded-2xl border border-slate-200">
+                                    <h4 class="font-black text-slate-900 mb-1 uppercase text-xs tracking-widest">Immune System (Guardrails)</h4>
+                                    <p class="text-xs text-slate-500 leading-relaxed">Model Armor protegendo contra Prompt Injection e vazamento de PII.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        mainContainer.innerHTML = html;
+      }
+
+      function renderFinOps() {
+        const html = `
+                <div class="space-y-8 animate-fade-in max-w-5xl">
+                    <div class="bg-white rounded-3xl p-10 border border-slate-200 shadow-sm">
+                        <h2 class="text-3xl font-black text-slate-900 mb-2 tracking-tighter">FinOps Simulator</h2>
+                        <p class="text-slate-500 font-medium mb-10">Simulação de TCO (Total Cost of Ownership) baseado em roteamento de modelos.</p>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                            <div class="space-y-8">
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Requisições Diárias</label>
+                                    <input type="range" min="100" max="10000" step="100" value="3000" class="w-full h-1.5 bg-slate-200 rounded-lg accent-blue-700">
+                                    <div class="flex justify-between mt-2 text-[10px] font-bold text-slate-400"><span>100</span><span>3.000</span><span>10.000</span></div>
+                                </div>
+                                <div class="bg-blue-700 text-white p-6 rounded-2xl shadow-lg">
+                                    <p class="text-[10px] font-bold uppercase opacity-50 mb-1">Custo Estimado Mensal</p>
+                                    <p class="text-3xl font-black">$ 2,450.00</p>
+                                    <p class="text-[10px] mt-4 opacity-70 italic font-medium">Cálculo baseado em roteamento Adaptativo (Módulo 2).</p>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="costChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        mainContainer.innerHTML = html;
+
+        const ctx = document.getElementById("costChart").getContext("2d");
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: ["Brute Force (Só Pro)", "Roteamento ADK"],
+            datasets: [
+              {
+                data: [8200, 2450],
+                backgroundColor: ["#E2E8F0", "#1D4ED8"],
+                borderRadius: 12,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { display: false },
+              x: {
+                grid: { display: false },
+                ticks: { font: { weight: "bold", size: 10 } },
+              },
+            },
+          },
+        });
+      }
+
+      // --- Init ---
+      initNavigation();
+      renderContent();
+
+      const style = document.createElement("style");
+      style.innerHTML = `@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards; }`;
+      document.head.appendChild(style);
+    </script>
+  </body>
+</html>

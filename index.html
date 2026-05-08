@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIAP — Hub de Materiais: Engenharia de Agentes Corporativos</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card-hover: #273349;
+      --border: #334155;
+      --border-accent: #475569;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --primary: #6366f1;
+      --primary-light: #818cf8;
+      --accent-green: #10b981;
+      --accent-blue: #38bdf8;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-violet: #a855f7;
+      --accent-cyan: #06b6d4;
+      --tag-bg: #1e293b;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #1e1b4b 0%, #1e293b 50%, #0c1a2e 100%);
+      border-bottom: 1px solid #312e81;
+      padding: 2.5rem 2rem 2rem;
+      text-align: center;
+    }
+    .header-badge {
+      display: inline-block;
+      background: rgba(99,102,241,0.15);
+      border: 1px solid rgba(99,102,241,0.4);
+      color: var(--primary-light);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.9rem;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+    }
+    .header h1 {
+      font-size: clamp(1.5rem, 4vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #e0e7ff, #818cf8, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.6rem;
+    }
+    .header-sub {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      max-width: 560px;
+      margin: 0 auto 1.4rem;
+    }
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-light);
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Search ── */
+    .search-bar {
+      padding: 1.25rem 2rem;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: center;
+    }
+    .search-bar input {
+      width: 100%;
+      max-width: 480px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.9rem;
+      padding: 0.55rem 1rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .search-bar input:focus { border-color: var(--primary); }
+    .search-bar input::placeholder { color: var(--text-dim); }
+
+    /* ── Layout ── */
+    .main { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+    /* ── Section ── */
+    .section { margin-bottom: 2.5rem; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .section-desc {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+    .section-count {
+      margin-left: auto;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.15rem 0.6rem;
+      white-space: nowrap;
+    }
+
+    /* ── Cards grid ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      transition: background .15s, border-color .15s, transform .15s;
+    }
+    .card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+      transform: translateY(-1px);
+    }
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .card-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.4;
+    }
+    .card-date {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .card-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+    .card-footer {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.25rem;
+    }
+    .tag {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+      background: rgba(99,102,241,0.12);
+      color: var(--primary-light);
+      border: 1px solid rgba(99,102,241,0.25);
+    }
+    .tag-green  { background: rgba(16,185,129,0.1);  color: #34d399; border-color: rgba(16,185,129,0.25); }
+    .tag-blue   { background: rgba(56,189,248,0.1);  color: #7dd3fc; border-color: rgba(56,189,248,0.25); }
+    .tag-amber  { background: rgba(245,158,11,0.1);  color: #fbbf24; border-color: rgba(245,158,11,0.25); }
+    .tag-rose   { background: rgba(244,63,94,0.1);   color: #fb7185; border-color: rgba(244,63,94,0.25); }
+    .tag-violet { background: rgba(168,85,247,0.1);  color: #c084fc; border-color: rgba(168,85,247,0.25); }
+    .tag-cyan   { background: rgba(6,182,212,0.1);   color: #67e8f9; border-color: rgba(6,182,212,0.25); }
+
+    .filename {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      font-family: 'Consolas', 'JetBrains Mono', monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    /* ── Hidden by search ── */
+    .card.hidden { display: none; }
+    .section.empty .cards { display: none; }
+    .section.empty .section-header::after {
+      content: "Nenhum resultado";
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-left: 0.5rem;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 0.78rem;
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-badge">FIAP · Engenharia de Agentes Corporativos</div>
+  <h1>Hub de Materiais do Curso</h1>
+  <p class="header-sub">Todos os HTMLs criados ao longo do curso, organizados por módulo e cronologia.</p>
+  <div class="stats">
+    <div class="stat"><span class="stat-value">32</span><span class="stat-label">arquivos HTML</span></div>
+    <div class="stat"><span class="stat-value">6</span><span class="stat-label">módulos</span></div>
+    <div class="stat"><span class="stat-value">Fev – Mai 2026</span><span class="stat-label">período</span></div>
+  </div>
+</header>
+
+<div class="search-bar">
+  <input type="text" id="search" placeholder="Pesquisar por título, descrição ou nome de arquivo…" autocomplete="off">
+</div>
+
+<main class="main">
+
+  <!-- ════════════════════ PLANO DE AULA ════════════════════ -->
+  <section class="section" data-section="plano-de-aula">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(99,102,241,0.15); color:#818cf8">📋</div>
+      <div>
+        <div class="section-title">Plano de Aula</div>
+        <div class="section-desc">Programa e materiais de planejamento do curso</div>
+      </div>
+      <span class="section-count">4 arquivos</span>
+    </div>
+    <div class="cards">
+
+      <a class="card" href="00-agentes-avancados-de-ia-programa.html">
+        <div class="card-top">
+          <span class="card-title">Programa: Agentes Avançados de IA</span>
+          <span class="card-date">01/02/2026</span>
+        </div>
+        <p class="card-desc">Visão geral completa do curso — objetivos, módulos, carga horária e competências esperadas.</p>
+        <div class="card-footer">
+          <span class="tag">programa</span>
+          <span class="filename">00-agentes-avancados-de-ia-programa.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="01-ecossistema-adk-economia-tokens.html">
+        <div class="card-top">
+          <span class="card-title">Aula 1 — Ecossistema ADK &amp; Economia de Tokens</span>
+          <span class="card-date">01/02/2026</span>
+        </div>
+        <p class="card-desc">Introdução ao ecossistema Agent Development Kit e fundamentos da economia de tokens em LLMs.</p>
+        <div class="card-footer">
+          <span class="tag">aula</span><span class="tag tag-blue">ADK</span>
+          <span class="filename">01-ecossistema-adk-economia-tokens.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="lab-calculadora-custos.html">
+        <div class="card-top">
+          <span class="card-title">Lab — Calculadora de Custos de Tokens</span>
+          <span class="card-date">01/02/2026</span>
+        </div>
+        <p class="card-desc">Ferramenta interativa para estimar custos de chamadas a LLMs com base em tokens de entrada e saída.</p>
+        <div class="card-footer">
+          <span class="tag tag-green">laboratório</span>
+          <span class="filename">lab-calculadora-custos.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="setup-guide.html">
+        <div class="card-top">
+          <span class="card-title">Guia de Setup do Ambiente</span>
+          <span class="card-date">02/02/2026</span>
+        </div>
+        <p class="card-desc">Passo a passo para configurar o ambiente de desenvolvimento: Python, dependências e chaves de API.</p>
+        <div class="card-footer">
+          <span class="tag tag-amber">setup</span>
+          <span class="filename">setup-guide.html</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════ CONTENT LIBRARY ════════════════════ -->
+  <section class="section" data-section="content-library">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(6,182,212,0.15); color:#67e8f9">🗂️</div>
+      <div>
+        <div class="section-title">Content Library — Hub Central</div>
+        <div class="section-desc">Dashboard de conteúdo do curso (129 h · 43 sessões)</div>
+      </div>
+      <span class="section-count">2 arquivos</span>
+    </div>
+    <div class="cards">
+
+      <a class="card" href="index-content-library-2026-02-01.html">
+        <div class="card-top">
+          <span class="card-title">Hub de Conteúdo — Content Library</span>
+          <span class="card-date">01/02/2026</span>
+        </div>
+        <p class="card-desc">Dashboard master com todos os módulos do curso: 129 horas de conteúdo distribuídas em 43 sessões.</p>
+        <div class="card-footer">
+          <span class="tag tag-cyan">hub</span>
+          <span class="filename">index-content-library-2026-02-01.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="01-langgraph.html">
+        <div class="card-top">
+          <span class="card-title">Módulo 2 — Introdução ao LangGraph</span>
+          <span class="card-date">04/02/2026</span>
+        </div>
+        <p class="card-desc">Conceitos fundamentais do LangGraph: grafos de estado, nós, arestas e fluxo de execução de agentes.</p>
+        <div class="card-footer">
+          <span class="tag">módulo 2</span><span class="tag tag-blue">LangGraph</span>
+          <span class="filename">01-langgraph.html</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════ AGENTE 1 ════════════════════ -->
+  <section class="section" data-section="agente-1">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(244,63,94,0.15); color:#fb7185">🔐</div>
+      <div>
+        <div class="section-title">Agente 1 — The Governance Gateway</div>
+        <div class="section-desc">Gateway de governança corporativa com controle de acesso</div>
+      </div>
+      <span class="section-count">4 arquivos</span>
+    </div>
+    <div class="cards">
+
+      <a class="card" href="index-agente-1-governance-gateway-2026-02-09.html">
+        <div class="card-top">
+          <span class="card-title">Governance Gateway — Página Principal</span>
+          <span class="card-date">09/02/2026</span>
+        </div>
+        <p class="card-desc">Página index do Agente 1: implementação do gateway de governança com validação de políticas corporativas.</p>
+        <div class="card-footer">
+          <span class="tag tag-rose">agente 1</span>
+          <span class="filename">index-agente-1-governance-gateway-2026-02-09.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="agente-1-governance-gateway--setup.html">
+        <div class="card-top">
+          <span class="card-title">Setup — Governance Gateway</span>
+          <span class="card-date">09/02/2026</span>
+        </div>
+        <p class="card-desc">Guia de instalação e configuração do Governance Gateway: pré-requisitos, variáveis de ambiente e execução.</p>
+        <div class="card-footer">
+          <span class="tag tag-rose">agente 1</span><span class="tag tag-amber">setup</span>
+          <span class="filename">agente-1-governance-gateway--setup.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="index-agente-1-mock-2026-02-09.html">
+        <div class="card-top">
+          <span class="card-title">Mock — Governance Gateway</span>
+          <span class="card-date">09/02/2026</span>
+        </div>
+        <p class="card-desc">Versão mock do Governance Gateway para testes e demonstrações sem dependências externas reais.</p>
+        <div class="card-footer">
+          <span class="tag tag-rose">agente 1</span><span class="tag tag-amber">mock</span>
+          <span class="filename">index-agente-1-mock-2026-02-09.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="agente-1-mock--setup.html">
+        <div class="card-top">
+          <span class="card-title">Setup — Mock Governance Gateway</span>
+          <span class="card-date">09/02/2026</span>
+        </div>
+        <p class="card-desc">Instruções de setup para a versão mock: configuração simplificada para ambiente de testes.</p>
+        <div class="card-footer">
+          <span class="tag tag-rose">agente 1</span><span class="tag tag-amber">setup</span>
+          <span class="filename">agente-1-mock--setup.html</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════ AGENTE 3 ════════════════════ -->
+  <section class="section" data-section="agente-3">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(168,85,247,0.15); color:#c084fc">🧠</div>
+      <div>
+        <div class="section-title">Agente 3 — The Memory</div>
+        <div class="section-desc">Arquitetura de memória com RAG, chunking e busca híbrida</div>
+      </div>
+      <span class="section-count">7 arquivos</span>
+    </div>
+    <div class="cards">
+
+      <a class="card" href="index-agente-3-the-memory-2026-02-20.html">
+        <div class="card-top">
+          <span class="card-title">The Memory — Arquitetura de Agentes</span>
+          <span class="card-date">20/02/2026</span>
+        </div>
+        <p class="card-desc">Página principal do Agente 3 com navegação lateral. Apresenta os padrões de arquitetura de memória de longo prazo.</p>
+        <div class="card-footer">
+          <span class="tag tag-violet">agente 3</span>
+          <span class="filename">index-agente-3-the-memory-2026-02-20.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="rag.html">
+        <div class="card-top">
+          <span class="card-title">RAG — Retrieval-Augmented Generation</span>
+          <span class="card-date">23/02/2026</span>
+        </div>
+        <p class="card-desc">Implementação e conceitos de RAG: pipeline de recuperação, embeddings e geração aumentada por contexto.</p>
+        <div class="card-footer">
+          <span class="tag tag-violet">agente 3</span><span class="tag tag-blue">RAG</span>
+          <span class="filename">rag.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="agente-3-memory--rag_II.html">
+        <div class="card-top">
+          <span class="card-title">RAG II — Conceitos Avançados</span>
+          <span class="card-date">04/02/2026</span>
+        </div>
+        <p class="card-desc">RAG avançado com gráficos Plotly.js: estratégias de chunking, janelas deslizantes e semântica de fragmentação.</p>
+        <div class="card-footer">
+          <span class="tag tag-violet">agente 3</span><span class="tag tag-blue">RAG avançado</span>
+          <span class="filename">agente-3-memory--rag_II.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="hybrid_search.html">
+        <div class="card-top">
+          <span class="card-title">Hybrid Search — Masterclass BM25 + RRF</span>
+          <span class="card-date">04/02/2026</span>
+        </div>
+        <p class="card-desc">Busca híbrida para auditoria de contratos: BM25 (busca esparsa) + Reciprocal Rank Fusion. Interface com abas interativas.</p>
+        <div class="card-footer">
+          <span class="tag tag-violet">agente 3</span><span class="tag tag-cyan">busca híbrida</span>
+          <span class="filename">hybrid_search.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="index-agente-3-memory-v1-2026-02-20.html">
+        <div class="card-top">
+          <span class="card-title">The Memory — Versão v1 (histórico)</span>
+          <span class="card-date">20/02/2026</span>
+        </div>
+        <p class="card-desc">Primeira versão do Agente 3, mantida para fins de referência histórica e comparação com a versão atual.</p>
+        <div class="card-footer">
+          <span class="tag tag-violet">agente 3</span><span class="tag tag-amber">histórico</span>
+          <span class="filename">index-agente-3-memory-v1-2026-02-20.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="agente-3-memory-v1--setup.html">
+        <div class="card-top">
+          <span class="card-title">Setup — The Memory v1</span>
+          <span class="card-date">20/02/2026</span>
+        </div>
+        <p class="card-desc">Guia de setup da versão v1 do Agente 3: configuração do ambiente de memória e dependências.</p>
+        <div class="card-footer">
+          <span class="tag tag-violet">agente 3</span><span class="tag tag-amber">setup</span>
+          <span class="filename">agente-3-memory-v1--setup.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="modulo1-agente-3--setup.html">
+        <div class="card-top">
+          <span class="card-title">Setup — Módulo 1 · Agente 3</span>
+          <span class="card-date">20/02/2026</span>
+        </div>
+        <p class="card-desc">Setup específico do Agente 3 conforme utilizado no Módulo 1 do curso (aula 4).</p>
+        <div class="card-footer">
+          <span class="tag tag-violet">agente 3</span><span class="tag tag-amber">módulo 1</span>
+          <span class="filename">modulo1-agente-3--setup.html</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════ AGENTE 4 ════════════════════ -->
+  <section class="section" data-section="agente-4">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(16,185,129,0.15); color:#34d399">🔍</div>
+      <div>
+        <div class="section-title">Agente 4 — RAG ADK &amp; Vector Search</div>
+        <div class="section-desc">RAG com ADK e busca vetorial no Vertex AI</div>
+      </div>
+      <span class="section-count">4 arquivos</span>
+    </div>
+    <div class="cards">
+
+      <a class="card" href="index-agente-4-rag-adk-2026-02-27.html">
+        <div class="card-top">
+          <span class="card-title">RAG ADK — Página Principal</span>
+          <span class="card-date">27/02/2026</span>
+        </div>
+        <p class="card-desc">Index do Agente 4: integração de RAG com o Agent Development Kit do Google.</p>
+        <div class="card-footer">
+          <span class="tag tag-green">agente 4</span><span class="tag tag-blue">RAG</span>
+          <span class="filename">index-agente-4-rag-adk-2026-02-27.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="index-4-agents-rag-vertex-2026-02-27.html">
+        <div class="card-top">
+          <span class="card-title">4 Agents RAG Vertex — Página Principal</span>
+          <span class="card-date">27/02/2026</span>
+        </div>
+        <p class="card-desc">Arquitetura com 4 agentes integrados ao Vertex AI para pipelines RAG corporativos.</p>
+        <div class="card-footer">
+          <span class="tag tag-green">agente 4</span><span class="tag tag-cyan">Vertex AI</span>
+          <span class="filename">index-4-agents-rag-vertex-2026-02-27.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="vector-search.html">
+        <div class="card-top">
+          <span class="card-title">Lab — Métricas de Distância Vetorial</span>
+          <span class="card-date">02/03/2026</span>
+        </div>
+        <p class="card-desc">Laboratório interativo com Chart.js: Manhattan (L1), Euclidiana (L2), Cosine e Produto Escalar — cálculos em tempo real.</p>
+        <div class="card-footer">
+          <span class="tag tag-green">agente 4</span><span class="tag tag-green">laboratório</span>
+          <span class="filename">vector-search.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="rag-vertex--rag_II.html">
+        <div class="card-top">
+          <span class="card-title">RAG II — Vertex AI (documentação)</span>
+          <span class="card-date">04/02/2026</span>
+        </div>
+        <p class="card-desc">Documentação avançada de RAG no contexto do Vertex AI — complementa o laboratório de vector search.</p>
+        <div class="card-footer">
+          <span class="tag tag-green">agente 4</span><span class="tag tag-blue">RAG avançado</span>
+          <span class="filename">rag-vertex--rag_II.html</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════ AGENTE 6 ════════════════════ -->
+  <section class="section" data-section="agente-6">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(56,189,248,0.15); color:#7dd3fc">🕸️</div>
+      <div>
+        <div class="section-title">Agente 6 — LangGraph ADK</div>
+        <div class="section-desc">Arquiteturas avançadas com LangGraph, A2A, HIL e Time Travel</div>
+      </div>
+      <span class="section-count">11 arquivos</span>
+    </div>
+    <div class="cards">
+
+      <a class="card" href="index-agente-6-langgraph-adk-2026-04-17.html">
+        <div class="card-top">
+          <span class="card-title">LangGraph ADK — Página Principal (v1)</span>
+          <span class="card-date">17/04/2026</span>
+        </div>
+        <p class="card-desc">Landing page do Agente 6 — primeira versão do curso de engenharia de agentes com LangGraph e ADK.</p>
+        <div class="card-footer">
+          <span class="tag tag-blue">agente 6</span>
+          <span class="filename">index-agente-6-langgraph-adk-2026-04-17.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="index-agentes-6-langgraph-adk-2026-04-24.html">
+        <div class="card-top">
+          <span class="card-title">LangGraph ADK — Página Principal (v2)</span>
+          <span class="card-date">24/04/2026</span>
+        </div>
+        <p class="card-desc">Versão atualizada (v2) do index do Agente 6 com conteúdo expandido e melhorias de layout.</p>
+        <div class="card-footer">
+          <span class="tag tag-blue">agente 6</span><span class="tag tag-amber">v2</span>
+          <span class="filename">index-agentes-6-langgraph-adk-2026-04-24.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="2026-02-01--modelo.html">
+        <div class="card-top">
+          <span class="card-title">Modelo de Arquitetura (v1)</span>
+          <span class="card-date">01/02/2026</span>
+        </div>
+        <p class="card-desc">Documentação de arquitetura: topologias de grafo, gerenciamento de estado e debugging com Chart.js.</p>
+        <div class="card-footer">
+          <span class="tag tag-blue">agente 6</span><span class="tag">arquitetura</span>
+          <span class="filename">2026-02-01--modelo.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="2026-04-24--modelo.html">
+        <div class="card-top">
+          <span class="card-title">Modelo de Arquitetura (v2 — 674 KB)</span>
+          <span class="card-date">24/04/2026</span>
+        </div>
+        <p class="card-desc">Versão completa e interativa: topologias, Human-in-the-Loop (HIL), time travel debugging, comparações de performance.</p>
+        <div class="card-footer">
+          <span class="tag tag-blue">agente 6</span><span class="tag tag-amber">v2 · completo</span>
+          <span class="filename">2026-04-24--modelo.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="aula-a2a.html">
+        <div class="card-top">
+          <span class="card-title">Aula — Comunicação A2A (Agent-to-Agent)</span>
+          <span class="card-date">24/04/2026</span>
+        </div>
+        <p class="card-desc">Padrões de comunicação entre agentes: protocolos A2A, orquestração e delegação de tarefas em sistemas multi-agente.</p>
+        <div class="card-footer">
+          <span class="tag tag-blue">agente 6</span><span class="tag tag-cyan">A2A</span>
+          <span class="filename">aula-a2a.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="2026-04-17--claude_code.html">
+        <div class="card-top">
+          <span class="card-title">Claude Code — Integração (v1)</span>
+          <span class="card-date">17/04/2026</span>
+        </div>
+        <p class="card-desc">Documentação de integração do Claude Code no fluxo de desenvolvimento de agentes — primeira versão.</p>
+        <div class="card-footer">
+          <span class="tag tag-blue">agente 6</span><span class="tag tag-violet">Claude Code</span>
+          <span class="filename">2026-04-17--claude_code.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="2026-04-24--claude_code.html">
+        <div class="card-top">
+          <span class="card-title">Claude Code — Integração (v2)</span>
+          <span class="card-date">24/04/2026</span>
+        </div>
+        <p class="card-desc">Versão atualizada da documentação de integração do Claude Code com o workflow de agentes.</p>
+        <div class="card-footer">
+          <span class="tag tag-blue">agente 6</span><span class="tag tag-violet">Claude Code</span><span class="tag tag-amber">v2</span>
+          <span class="filename">2026-04-24--claude_code.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="2026-04-24--matriz-priorizacao-roi-ia.html">
+        <div class="card-top">
+          <span class="card-title">Matriz de Priorização ROI em IA (v1)</span>
+          <span class="card-date">24/04/2026</span>
+        </div>
+        <p class="card-desc">Framework para priorizar iniciativas de IA corporativa com base em retorno sobre investimento e viabilidade técnica.</p>
+        <div class="card-footer">
+          <span class="tag tag-blue">agente 6</span><span class="tag tag-green">ROI</span>
+          <span class="filename">2026-04-24--matriz-priorizacao-roi-ia.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="2026-05-01--matriz-priorizacao-roi-ia.html">
+        <div class="card-top">
+          <span class="card-title">Matriz de Priorização ROI em IA (v2)</span>
+          <span class="card-date">01/05/2026</span>
+        </div>
+        <p class="card-desc">Versão revisada da matriz ROI com critérios expandidos e metodologia atualizada para projetos de IA.</p>
+        <div class="card-footer">
+          <span class="tag tag-blue">agente 6</span><span class="tag tag-green">ROI</span><span class="tag tag-amber">v2</span>
+          <span class="filename">2026-05-01--matriz-priorizacao-roi-ia.html</span>
+        </div>
+      </a>
+
+      <a class="card" href="arquitetura-visao-macro-projetos-ia.html">
+        <div class="card-top">
+          <span class="card-title">Arquitetura — Visão Macro de Projetos de IA</span>
+          <span class="card-date">30/04/2026</span>
+        </div>
+        <p class="card-desc">Visão estratégica e arquitetural de projetos de IA corporativa: camadas, integrações e governança em nível macro.</p>
+        <div class="card-footer">
+          <span class="tag tag-blue">agente 6</span><span class="tag">arquitetura</span>
+          <span class="filename">arquitetura-visao-macro-projetos-ia.html</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  Gerado automaticamente &bull; FIAP · Engenharia de Agentes Corporativos &bull; 2026
+</footer>
+
+<script>
+  const input = document.getElementById('search');
+
+  input.addEventListener('input', () => {
+    const q = input.value.toLowerCase().trim();
+    document.querySelectorAll('.section').forEach(section => {
+      let visible = 0;
+      section.querySelectorAll('.card').forEach(card => {
+        const text = card.textContent.toLowerCase();
+        const match = !q || text.includes(q);
+        card.classList.toggle('hidden', !match);
+        if (match) visible++;
+      });
+      section.classList.toggle('empty', visible === 0);
+    });
+  });
+</script>
+
+</body>
+</html>

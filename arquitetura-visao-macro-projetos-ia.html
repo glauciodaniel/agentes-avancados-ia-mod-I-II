@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arquitetura Macro de Projetos de IA | Workshop Executivo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #0f172a;
+        color: #e2e8f0;
+      }
+      .font-mono {
+        font-family: "JetBrains Mono", monospace;
+      }
+      .nav-item {
+        border-left: 3px solid transparent;
+        transition: all 0.2s ease;
+      }
+      .nav-item:hover {
+        background: rgba(59, 130, 246, 0.1);
+      }
+      .nav-item.active {
+        border-left-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+      }
+      .submenu {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+      }
+      .submenu.open {
+        max-height: 600px;
+      }
+      .submenu-item {
+        font-size: 0.8rem;
+        padding: 0.5rem 1rem 0.5rem 3rem;
+      }
+      .card {
+        background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+        border: 1px solid #334155;
+        transition: all 0.3s ease;
+      }
+      .card:hover {
+        border-color: #3b82f6;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px -10px rgba(59, 130, 246, 0.3);
+      }
+      .fade-in {
+        animation: fadeIn 0.35s ease-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .diagram-box {
+        border: 1px dashed #475569;
+        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.5);
+      }
+    </style>
+  </head>
+  <body class="flex flex-col h-screen overflow-hidden">
+    <header
+      class="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between z-30"
+    >
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center"
+        >
+          <i class="fas fa-sitemap text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white">Arquitetura Macro em IA</h1>
+          <p
+            class="text-[10px] text-slate-500 font-semibold uppercase tracking-widest"
+          >
+            Workshop Executivo · Misto (Tech + Negócio)
+          </p>
+        </div>
+      </div>
+      <button
+        onclick="window.print()"
+        class="px-4 py-2 bg-slate-700/40 text-slate-300 hover:bg-slate-700/60 rounded-lg text-sm font-semibold transition-all"
+      >
+        <i class="fas fa-print mr-2"></i>Imprimir
+      </button>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+      <aside
+        class="w-72 bg-slate-900 border-r border-slate-800 flex flex-col flex-shrink-0 overflow-y-auto"
+      >
+        <div
+          class="p-4 mx-4 mt-4 bg-blue-600/10 border border-blue-600/30 rounded-xl"
+        >
+          <div
+            class="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-1"
+          >
+            Material Guia
+          </div>
+          <div class="text-sm font-bold text-white leading-tight">
+            Como desenhar visão macro de IA
+          </div>
+          <div class="text-xs text-slate-400 mt-2">
+            <i class="fas fa-clock mr-1"></i> 60-90 min · Framework prático
+          </div>
+        </div>
+
+        <nav class="flex-1 py-4">
+          <ul class="space-y-1 px-2">
+            <li>
+              <button
+                onclick="router('dashboard')"
+                id="nav-dashboard"
+                class="nav-item active w-full text-left px-4 py-3 rounded-lg text-sm font-medium"
+              >
+                <i class="fas fa-home w-6 text-slate-400"></i> Visão Geral
+              </button>
+            </li>
+            <li>
+              <button
+                onclick="toggleSubmenu('fundamentos')"
+                class="nav-item w-full text-left px-4 py-3 rounded-lg text-sm font-medium flex items-center justify-between"
+              >
+                <span
+                  ><i class="fas fa-compass w-6 text-slate-400"></i
+                  >Fundamentos</span
+                >
+                <i
+                  class="fas fa-chevron-down text-slate-500 transition-transform"
+                  id="icon-fundamentos"
+                ></i>
+              </button>
+              <ul class="submenu" id="submenu-fundamentos">
+                <li>
+                  <button
+                    onclick="router('fundamentos/por-que')"
+                    class="submenu-item nav-item w-full text-left text-slate-400 hover:text-white"
+                  >
+                    Por que visão macro
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onclick="router('fundamentos/modelo')"
+                    class="submenu-item nav-item w-full text-left text-slate-400 hover:text-white"
+                  >
+                    Modelo de desenho
+                  </button>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <button
+                onclick="router('camadas')"
+                id="nav-camadas"
+                class="nav-item w-full text-left px-4 py-3 rounded-lg text-sm font-medium"
+              >
+                <i class="fas fa-layer-group w-6 text-slate-400"></i> Camadas da
+                Arquitetura
+              </button>
+            </li>
+            <li>
+              <button
+                onclick="toggleSubmenu('padroes')"
+                class="nav-item w-full text-left px-4 py-3 rounded-lg text-sm font-medium flex items-center justify-between"
+              >
+                <span><i class="fas fa-project-diagram w-6 text-slate-400"></i>Padrões</span>
+                <i
+                  class="fas fa-chevron-down text-slate-500 transition-transform"
+                  id="icon-padroes"
+                ></i>
+              </button>
+              <ul class="submenu" id="submenu-padroes">
+                <li>
+                  <button
+                    onclick="router('padroes/rag')"
+                    class="submenu-item nav-item w-full text-left text-slate-400 hover:text-white"
+                  >
+                    Padrão RAG
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onclick="router('padroes/agentes')"
+                    class="submenu-item nav-item w-full text-left text-slate-400 hover:text-white"
+                  >
+                    Padrão Agentes
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onclick="router('padroes/fine-tuning')"
+                    class="submenu-item nav-item w-full text-left text-slate-400 hover:text-white"
+                  >
+                    Padrão Fine-tuning
+                  </button>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <button
+                onclick="router('stack')"
+                id="nav-stack"
+                class="nav-item w-full text-left px-4 py-3 rounded-lg text-sm font-medium"
+              >
+                <i class="fas fa-cubes w-6 text-slate-400"></i> Componentes & Stack
+              </button>
+            </li>
+            <li>
+              <button
+                onclick="router('decisoes')"
+                id="nav-decisoes"
+                class="nav-item w-full text-left px-4 py-3 rounded-lg text-sm font-medium"
+              >
+                <i class="fas fa-scale-balanced w-6 text-slate-400"></i> Decisões &
+                Trade-offs
+              </button>
+            </li>
+            <li>
+              <button
+                onclick="router('ficha')"
+                id="nav-ficha"
+                class="nav-item w-full text-left px-4 py-3 rounded-lg text-sm font-medium"
+              >
+                <i class="fas fa-clipboard-check w-6 text-green-400"></i> Ficha do
+                Diagrama Macro
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+      <main class="flex-1 overflow-y-auto bg-slate-950" id="main-content"></main>
+    </div>
+
+    <script>
+      let currentRoute = "dashboard";
+
+      function router(route) {
+        currentRoute = route;
+        document
+          .querySelectorAll(".nav-item")
+          .forEach((el) => el.classList.remove("active"));
+
+        const routeId = "nav-" + route.replace("/", "-");
+        const activeEl = document.getElementById(routeId);
+        if (activeEl) activeEl.classList.add("active");
+
+        const [section] = route.split("/");
+        const parentSubmenu = document.getElementById(`submenu-${section}`);
+        if (parentSubmenu && !parentSubmenu.classList.contains("open")) {
+          toggleSubmenu(section);
+        }
+
+        const main = document.getElementById("main-content");
+        main.innerHTML = "";
+        main.scrollTop = 0;
+        const [sec, sub] = route.split("/");
+
+        switch (sec) {
+          case "dashboard":
+            renderDashboard(main);
+            break;
+          case "fundamentos":
+            renderFundamentos(main, sub);
+            break;
+          case "camadas":
+            renderCamadas(main);
+            break;
+          case "padroes":
+            renderPadroes(main, sub);
+            break;
+          case "stack":
+            renderStack(main);
+            break;
+          case "decisoes":
+            renderDecisoes(main);
+            break;
+          case "ficha":
+            renderFicha(main);
+            break;
+          default:
+            renderDashboard(main);
+        }
+      }
+
+      function toggleSubmenu(name) {
+        const submenu = document.getElementById(`submenu-${name}`);
+        const icon = document.getElementById(`icon-${name}`);
+        if (!submenu) return;
+        if (submenu.classList.contains("open")) {
+          submenu.classList.remove("open");
+          if (icon) icon.style.transform = "rotate(0deg)";
+        } else {
+          submenu.classList.add("open");
+          if (icon) icon.style.transform = "rotate(180deg)";
+        }
+      }
+
+      function renderDashboard(container) {
+        container.innerHTML = `
+          <div class="p-8 fade-in">
+            <div class="mb-8">
+              <div class="text-blue-400 text-xs font-bold uppercase tracking-widest mb-2">
+                <i class="fas fa-map mr-2"></i> Guia prático para times mistos
+              </div>
+              <h1 class="text-4xl font-black text-white mb-3">Arquitetura visão macro de projetos de IA</h1>
+              <p class="text-slate-400 text-lg max-w-3xl">
+                Material para facilitar conversas entre negócio e tecnologia, desenhar blocos principais e alinhar decisões de custo, risco e escalabilidade.
+              </p>
+            </div>
+            <div class="grid grid-cols-4 gap-4 mb-8">
+              ${[
+                { label: "Camadas", value: "6 essenciais" },
+                { label: "Padrões", value: "RAG · Agentes · FT" },
+                { label: "Público", value: "Misto" },
+                { label: "Saída", value: "Ficha Macro" },
+              ]
+                .map(
+                  (s) => `
+                <div class="card rounded-xl p-5">
+                  <div class="text-slate-500 text-xs font-bold uppercase mb-1">${s.label}</div>
+                  <div class="text-2xl font-black text-white">${s.value}</div>
+                </div>
+              `,
+                )
+                .join("")}
+            </div>
+            <div class="card rounded-xl p-6 border-l-4 border-l-blue-500">
+              <h3 class="text-lg font-bold text-white mb-3"><i class="fas fa-bullseye mr-2 text-blue-400"></i>Resultado esperado</h3>
+              <p class="text-slate-300 text-sm leading-relaxed">
+                Ao final, você terá um desenho macro com: objetivo de negócio, fluxo ponta a ponta, componentes técnicos, guardrails e métricas operacionais para comitê e execução.
+              </p>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderFundamentos(container, sub) {
+        if (!sub || sub === "por-que") {
+          container.innerHTML = `
+            <div class="p-8 fade-in">
+              <h1 class="text-4xl font-black text-white mb-3">Por que visão macro primeiro</h1>
+              <p class="text-slate-400 text-lg mb-6">Projetos de IA quebram mais por desalinhamento entre áreas do que por falha de modelo.</p>
+              <div class="grid grid-cols-3 gap-6">
+                ${[
+                  {
+                    title: "Alinha decisão executiva",
+                    desc: "Mostra custo, risco, tempo e dependências sem entrar em detalhe técnico prematuro.",
+                    icon: "users",
+                  },
+                  {
+                    title: "Evita retrabalho técnico",
+                    desc: "Define fronteiras de responsabilidade antes de discutir ferramenta ou linguagem.",
+                    icon: "rotate-left",
+                  },
+                  {
+                    title: "Acelera execução",
+                    desc: "Quando o macro está claro, squads derivam backlog técnico com menos debate improdutivo.",
+                    icon: "bolt",
+                  },
+                ]
+                  .map(
+                    (i) => `
+                  <div class="card rounded-xl p-6">
+                    <div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-4">
+                      <i class="fas fa-${i.icon} text-blue-400 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2">${i.title}</h3>
+                    <p class="text-sm text-slate-400">${i.desc}</p>
+                  </div>
+                `,
+                  )
+                  .join("")}
+              </div>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <div class="p-8 fade-in">
+              <h1 class="text-4xl font-black text-white mb-3">Modelo de desenho (C4 simplificado para IA)</h1>
+              <p class="text-slate-400 text-lg mb-6">Use quatro perguntas para montar o diagrama macro:</p>
+              <div class="space-y-4">
+                ${[
+                  "Quem usa e qual decisão o sistema apoia?",
+                  "Quais entradas e saídas de dados existem?",
+                  "Quais blocos de IA e software compõem a solução?",
+                  "Quais controles de risco e observabilidade são obrigatórios?",
+                ]
+                  .map(
+                    (q, idx) => `
+                  <div class="card rounded-xl p-5 flex items-start gap-4">
+                    <div class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 font-bold flex items-center justify-center">${idx + 1}</div>
+                    <p class="text-slate-300 text-sm">${q}</p>
+                  </div>
+                `,
+                  )
+                  .join("")}
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      function renderCamadas(container) {
+        container.innerHTML = `
+          <div class="p-8 fade-in">
+            <h1 class="text-4xl font-black text-white mb-3">6 camadas essenciais da arquitetura</h1>
+            <p class="text-slate-400 text-lg mb-6">Do canal de entrada até governança e monitoramento contínuo.</p>
+            <div class="card rounded-xl p-6 mb-6">
+              <div class="diagram-box p-5 space-y-3">
+                ${[
+                  "1) Canais (Web, app, CRM, WhatsApp, API)",
+                  "2) Orquestração (LangGraph, ADK, workflow engine)",
+                  "3) Inteligência (LLM, embeddings, regras, modelos preditivos)",
+                  "4) Conhecimento e Dados (vector DB, SQL, documentos, eventos)",
+                  "5) Integrações (ERP, core, APIs internas/externas, ferramentas)",
+                  "6) Governança e Observabilidade (guardrails, auditoria, custo, qualidade)",
+                ]
+                  .map(
+                    (item) => `
+                  <div class="bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-3 text-sm text-slate-200">${item}</div>
+                `,
+                  )
+                  .join("")}
+              </div>
+            </div>
+            <div class="card rounded-xl p-6 border-l-4 border-l-amber-500">
+              <p class="text-sm text-slate-300">
+                Regra prática: se o desenho não explicita <strong class="text-white">entrada</strong>, <strong class="text-white">decisão</strong>, <strong class="text-white">fonte de verdade</strong> e <strong class="text-white">controle de risco</strong>, ainda não está pronto para execução.
+              </p>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderPadroes(container, sub) {
+        const mode = sub || "rag";
+        const data = {
+          rag: {
+            title: "Padrão RAG",
+            desc: "Melhor quando o valor depende de contexto interno atualizado.",
+            flow: ["Usuário", "Orquestrador", "Retriever", "Vector DB", "LLM", "Resposta com fontes"],
+            stack: "Stack típica: embeddings + vector DB + LLM + guardrails de saída",
+          },
+          agentes: {
+            title: "Padrão Agentes",
+            desc: "Melhor para tarefas multi-etapa com uso de ferramentas e decisão dinâmica.",
+            flow: ["Usuário", "Agente", "Planner", "Ferramentas/APIs", "Memória curta", "Resultado"],
+            stack: "Stack típica: LangGraph/ADK + tool calling + políticas de execução",
+          },
+          "fine-tuning": {
+            title: "Padrão Fine-tuning",
+            desc: "Melhor quando há padrão estável e grande volume com necessidade de especialização.",
+            flow: ["Dados rotulados", "Treino", "Modelo ajustado", "Inferência", "Monitoramento", "Retraining"],
+            stack: "Stack típica: pipeline MLOps + registry + avaliação contínua",
+          },
+        }[mode];
+
+        container.innerHTML = `
+          <div class="p-8 fade-in">
+            <h1 class="text-4xl font-black text-white mb-3">${data.title}</h1>
+            <p class="text-slate-400 text-lg mb-6">${data.desc}</p>
+            <div class="card rounded-xl p-6 mb-6">
+              <div class="diagram-box p-5">
+                <div class="grid grid-cols-6 gap-2">
+                  ${data.flow
+                    .map(
+                      (step, i) => `
+                    <div class="bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs text-center text-slate-200 font-semibold">
+                      ${step}
+                    </div>
+                    ${i < data.flow.length - 1 ? '<div class="text-center text-blue-400 text-lg self-center">→</div>' : ""}
+                  `,
+                    )
+                    .join("")}
+                </div>
+              </div>
+            </div>
+            <div class="card rounded-xl p-6 border-l-4 border-l-blue-500">
+              <p class="text-sm text-slate-300">${data.stack}</p>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderStack(container) {
+        container.innerHTML = `
+          <div class="p-8 fade-in">
+            <h1 class="text-4xl font-black text-white mb-3">Componentes e stack por camada</h1>
+            <p class="text-slate-400 text-lg mb-6">Sugestões de tecnologias para acelerar decisões arquiteturais.</p>
+            <div class="grid grid-cols-2 gap-6">
+              ${[
+                ["Orquestração", "LangGraph, ADK, Temporal, workflows orientados a estado"],
+                ["Modelos", "OpenAI/Azure OpenAI, modelos open source, modelos de domínio"],
+                ["Conhecimento", "Azure AI Search, PGVector, Qdrant, Milvus, Elastic"],
+                ["Integrações", "APIs REST, filas/eventos, conectores com ERP/CRM/core"],
+                ["Segurança", "RBAC, gestão de segredos, isolamento por ambiente, PII masking"],
+                ["Observabilidade", "Tracing, custos por chamada, avaliação de qualidade, alertas"],
+              ]
+                .map(
+                  (row) => `
+                <div class="card rounded-xl p-6">
+                  <h3 class="text-lg font-bold text-white mb-2">${row[0]}</h3>
+                  <p class="text-sm text-slate-400">${row[1]}</p>
+                </div>
+              `,
+                )
+                .join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderDecisoes(container) {
+        container.innerHTML = `
+          <div class="p-8 fade-in">
+            <h1 class="text-4xl font-black text-white mb-3">Decisões e trade-offs críticos</h1>
+            <p class="text-slate-400 text-lg mb-6">Escolhas que mudam custo, risco e velocidade de entrega.</p>
+            <div class="grid grid-cols-3 gap-6">
+              ${[
+                ["Cloud vs On-prem", "Cloud acelera time-to-market; on-prem pode reduzir risco regulatório em dados sensíveis."],
+                ["Build vs Buy", "Buy acelera curto prazo; Build só compensa com diferencial competitivo sustentável."],
+                ["Generalista vs Especializado", "Modelo generalista é flexível; especializado ganha em acurácia de domínio com custo maior de operação."],
+              ]
+                .map(
+                  (d) => `
+                <div class="card rounded-xl p-6 border-l-4 border-l-purple-500">
+                  <h3 class="text-lg font-bold text-white mb-3">${d[0]}</h3>
+                  <p class="text-sm text-slate-400">${d[1]}</p>
+                </div>
+              `,
+                )
+                .join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderFicha(container) {
+        container.innerHTML = `
+          <div class="p-8 fade-in">
+            <h1 class="text-4xl font-black text-white mb-3">Ficha do Diagrama Macro</h1>
+            <p class="text-slate-400 text-lg mb-6">Preencha para consolidar o desenho arquitetural e enviar para comitê técnico-executivo.</p>
+            <div class="card rounded-xl p-8">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Nome do projeto</label>
+                  <input id="f-projeto" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white outline-none" />
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Padrão principal</label>
+                  <input id="f-padrao" placeholder="RAG, Agente, Fine-tuning, Híbrido" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white outline-none" />
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Objetivo de negócio</label>
+                  <textarea id="f-objetivo" rows="2" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white outline-none resize-y"></textarea>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Fontes de dados críticas</label>
+                  <input id="f-dados" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white outline-none" />
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Integrações críticas</label>
+                  <input id="f-integracoes" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white outline-none" />
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Risco principal</label>
+                  <input id="f-risco" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white outline-none" />
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Métrica de sucesso</label>
+                  <input id="f-kpi" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white outline-none" />
+                </div>
+              </div>
+              <div class="flex flex-wrap items-center gap-3 mt-6">
+                <button onclick="copiarFicha()" class="px-5 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition-all">
+                  <i class="fas fa-copy mr-2"></i>Copiar ficha
+                </button>
+                <span id="ficha-status" class="text-sm text-green-400 font-semibold"></span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function copiarFicha() {
+        const v = (id) => document.getElementById(id).value.trim() || "—";
+        const texto = [
+          "=== FICHA DO DIAGRAMA MACRO DE IA ===",
+          `Projeto: ${v("f-projeto")}`,
+          `Padrao: ${v("f-padrao")}`,
+          `Objetivo: ${v("f-objetivo")}`,
+          `Dados criticos: ${v("f-dados")}`,
+          `Integracoes criticas: ${v("f-integracoes")}`,
+          `Risco principal: ${v("f-risco")}`,
+          `KPI: ${v("f-kpi")}`,
+          `Data: ${new Date().toLocaleDateString("pt-BR")}`,
+        ].join("\n");
+        const status = document.getElementById("ficha-status");
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(texto).then(() => {
+            status.textContent = "Copiado! Pronto para compartilhar no comite.";
+            setTimeout(() => (status.textContent = ""), 4000);
+          });
+        }
+      }
+
+      router("dashboard");
+    </script>
+  </body>
+</html>

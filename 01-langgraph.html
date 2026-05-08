@@ -1,0 +1,3252 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aula 3: LangGraph para Engenharia Bancária</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;600;700&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #030712;
+        color: #f3f4f6;
+      }
+
+      .font-mono {
+        font-family: "Fira Code", monospace;
+      }
+
+      /* Scrollbar Personalizada */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #111827;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #374151;
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #ea580c;
+      }
+
+      /* Navegação */
+      .nav-link {
+        transition: all 0.2s ease;
+        border-left: 3px solid transparent;
+      }
+      .nav-link.active {
+        background-color: #111827;
+        border-left-color: #ea580c;
+        color: #ea580c;
+      }
+
+      /* Animações */
+      .fade-in {
+        animation: fadeIn 0.4s ease-out forwards;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Estilo Code */
+      pre {
+        background-color: #0f172a;
+        border: 1px solid #1e293b;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        color: #cbd5e1;
+        overflow-x: auto;
+      }
+
+      /* Simulador de Grafo */
+      .node {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .node-active {
+        border-color: #ea580c !important;
+        box-shadow: 0 0 20px rgba(234, 88, 12, 0.4);
+        transform: scale(1.05);
+      }
+      .node-hitl {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+      }
+
+      .modal-overlay {
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(4px);
+      }
+    </style>
+  </head>
+  <body class="flex h-screen overflow-hidden">
+    <!-- Sidebar Navigation -->
+    <aside
+      class="w-72 bg-gray-900 border-r border-gray-800 flex flex-col hidden md:flex"
+    >
+      <div class="p-6 border-b border-gray-800">
+        <h1 class="text-xl font-bold flex items-center gap-2">
+          <i class="fas fa-project-diagram text-orange-500"></i>
+          <span
+            >LangGraph
+            <span class="text-xs font-light text-gray-500">v0.2</span></span
+          >
+        </h1>
+        <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">
+          Módulo de Engenharia Sênior
+        </p>
+      </div>
+
+      <nav class="flex-1 overflow-y-auto py-4">
+        <ul class="space-y-1">
+          <li>
+            <button
+              onclick="showSection('intro')"
+              id="btn-intro"
+              class="nav-link w-full text-left px-6 py-3 text-sm flex items-center gap-3 active"
+            >
+              <i class="fas fa-info-circle"></i> O Que é o Grafo?
+            </button>
+          </li>
+          <li>
+            <button
+              onclick="showSection('vs')"
+              id="btn-vs"
+              class="nav-link w-full text-left px-6 py-3 text-sm flex items-center gap-3"
+            >
+              <i class="fas fa-exchange-alt"></i> LangChain vs LangGraph
+            </button>
+          </li>
+          <li>
+            <button
+              onclick="showSection('state')"
+              id="btn-state"
+              class="nav-link w-full text-left px-6 py-3 text-sm flex items-center gap-3"
+            >
+              <i class="fas fa-database"></i> Gestão de Estado
+            </button>
+          </li>
+          <li>
+            <button
+              onclick="showSection('hitl')"
+              id="btn-hitl"
+              class="nav-link w-full text-left px-6 py-3 text-sm flex items-center gap-3"
+            >
+              <i class="fas fa-hand-paper"></i> Human-In-The-Loop
+            </button>
+          </li>
+          <li
+            class="pt-4 px-6 pb-2 text-[10px] font-bold text-gray-600 uppercase"
+          >
+            Arquitetura Avançada
+          </li>
+          <li>
+            <button
+              onclick="showSection('architecture')"
+              id="btn-architecture"
+              class="nav-link w-full text-left px-6 py-3 text-sm flex items-center gap-3"
+            >
+              <i class="fas fa-sitemap"></i> Grafos Distribuídos
+            </button>
+          </li>
+          <li>
+            <button
+              onclick="showSection('patterns')"
+              id="btn-patterns"
+              class="nav-link w-full text-left px-6 py-3 text-sm flex items-center gap-3"
+            >
+              <i class="fas fa-puzzle-piece"></i> Padrões de Design
+            </button>
+          </li>
+          <li>
+            <button
+              onclick="showSection('observability')"
+              id="btn-observability"
+              class="nav-link w-full text-left px-6 py-3 text-sm flex items-center gap-3"
+            >
+              <i class="fas fa-search"></i> Debugging & Logs
+            </button>
+          </li>
+          <li>
+            <button
+              onclick="showSection('security')"
+              id="btn-security"
+              class="nav-link w-full text-left px-6 py-3 text-sm flex items-center gap-3"
+            >
+              <i class="fas fa-shield-alt"></i> Segurança & Compliance
+            </button>
+          </li>
+          <li>
+            <button
+              onclick="showSection('cases')"
+              id="btn-cases"
+              class="nav-link w-full text-left px-6 py-3 text-sm flex items-center gap-3"
+            >
+              <i class="fas fa-university"></i> Casos Bancários
+            </button>
+          </li>
+          <li>
+            <button
+              onclick="showSection('advanced')"
+              id="btn-advanced"
+              class="nav-link w-full text-left px-6 py-3 text-sm flex items-center gap-3"
+            >
+              <i class="fas fa-brain"></i> Tópicos Avançados
+            </button>
+          </li>
+          <li
+            class="pt-4 px-6 pb-2 text-[10px] font-bold text-gray-600 uppercase"
+          >
+            Production Ready
+          </li>
+          <li>
+            <button
+              onclick="showSection('performance')"
+              id="btn-performance"
+              class="nav-link w-full text-left px-6 py-3 text-sm flex items-center gap-3"
+            >
+              <i class="fas fa-rocket"></i> Performance & Scale
+            </button>
+          </li>
+          <li>
+            <button
+              onclick="showSection('testing')"
+              id="btn-testing"
+              class="nav-link w-full text-left px-6 py-3 text-sm flex items-center gap-3"
+            >
+              <i class="fas fa-vials"></i> Testes Avançados
+            </button>
+          </li>
+          <li>
+            <button
+              onclick="showSection('deployment')"
+              id="btn-deployment"
+              class="nav-link w-full text-left px-6 py-3 text-sm flex items-center gap-3"
+            >
+              <i class="fas fa-cloud"></i> Deploy Production
+            </button>
+          </li>
+          <li
+            class="pt-4 px-6 pb-2 text-[10px] font-bold text-gray-600 uppercase"
+          >
+            Projeto Prático
+          </li>
+          <li>
+            <button
+              onclick="showSection('lab')"
+              id="btn-lab"
+              class="nav-link w-full text-left px-6 py-3 text-sm flex items-center gap-3 text-orange-400 font-bold"
+            >
+              <i class="fas fa-flask"></i> Lab: Motor de Decisão
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="p-4 border-t border-gray-800 bg-gray-950/50">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center font-bold text-white text-xs"
+          >
+            BK
+          </div>
+          <div class="text-xs">
+            <p class="font-bold text-gray-300">Bank Engineering</p>
+            <p class="text-green-500">● Módulo 03 Ativo</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto bg-gray-950 relative" id="content-area">
+      <!-- Sections will be injected here -->
+    </main>
+
+    <!-- Templates Section -->
+    <template id="template-intro">
+      <div class="p-8 md:p-12 max-w-4xl mx-auto fade-in">
+        <span
+          class="text-orange-500 text-xs font-bold uppercase tracking-widest"
+          >Conceito Básico</span
+        >
+        <h2 class="text-4xl font-bold text-white mt-2 mb-6">
+          Introdução aos Grafos Computacionais
+        </h2>
+        <p class="text-gray-400 leading-relaxed mb-8">
+          Para engenheiros bancários, o LangGraph não é apenas uma biblioteca de
+          IA; é uma estrutura para construir **Máquinas de Estado Finito
+          Estocásticas**. Em fluxos críticos (crédito, fraude), não podemos
+          aceitar o "caos" de um agente puramente autônomo. Precisamos de
+          controle.
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-6 mb-12">
+          <div class="bg-gray-900 border border-gray-800 p-6 rounded-xl">
+            <h4 class="text-orange-500 font-bold mb-3">
+              <i class="fas fa-dot-circle mr-2"></i>Nós (Nodes)
+            </h4>
+            <p class="text-sm text-gray-500">
+              Unidades de computação. No LangGraph, cada Nó é uma função Python
+              que recebe o estado atual e retorna uma atualização.
+            </p>
+          </div>
+          <div class="bg-gray-900 border border-gray-800 p-6 rounded-xl">
+            <h4 class="text-blue-500 font-bold mb-3">
+              <i class="fas fa-project-diagram mr-2"></i>Arestas (Edges)
+            </h4>
+            <p class="text-sm text-gray-500">
+              As regras de transição. Podem ser determinísticas (A -> B) ou
+              condicionais (se X, então C; senão D).
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-gray-800/50 border border-gray-700 p-6 rounded-xl">
+          <h4 class="text-white font-bold mb-4">Arquitetura de Ciclo</h4>
+          <p class="text-sm text-gray-400 mb-4">
+            Diferente de sistemas tradicionais, agentes precisam de **loops de
+            reflexão**. Se um dado está faltando para a aprovação de crédito, o
+            grafo deve ser capaz de voltar ao nó de coleta.
+          </p>
+          <div
+            class="flex justify-center p-6 bg-gray-950 rounded-lg border border-gray-800"
+          >
+            <!-- Diagrama de Grafo Bancário -->
+            <div class="relative w-full max-w-md">
+              <!-- Nós do Grafo -->
+              <div class="flex flex-col items-center space-y-8">
+                <!-- START -->
+                <div
+                  class="w-24 h-12 bg-green-600 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+                >
+                  START
+                </div>
+
+                <!-- Seta para baixo -->
+                <div class="w-0.5 h-6 bg-gray-600"></div>
+
+                <!-- Coleta de Dados -->
+                <div
+                  class="w-32 h-12 bg-blue-600 rounded-lg flex items-center justify-center text-white text-xs font-bold text-center"
+                >
+                  Coleta<br />Dados
+                </div>
+
+                <!-- Seta para baixo -->
+                <div class="w-0.5 h-6 bg-gray-600"></div>
+
+                <!-- Scoring -->
+                <div
+                  class="w-32 h-12 bg-purple-600 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+                >
+                  Scoring
+                </div>
+
+                <!-- Decisão Condicional -->
+                <div class="relative">
+                  <div class="w-0.5 h-6 bg-gray-600"></div>
+                  <div
+                    class="w-20 h-20 bg-yellow-600 transform rotate-45 flex items-center justify-center text-white text-xs font-bold"
+                  >
+                    <span class="transform -rotate-45">Score<br />OK?</span>
+                  </div>
+                </div>
+
+                <!-- Setas e Nós de Decisão -->
+                <div class="flex items-center space-x-16 mt-8">
+                  <!-- Caminho SIM -->
+                  <div class="flex flex-col items-center space-y-4">
+                    <div class="text-green-400 text-xs font-bold">SIM</div>
+                    <div
+                      class="w-24 h-12 bg-green-600 rounded-lg flex items-center justify-center text-white text-xs font-bold text-center"
+                    >
+                      Aprovado
+                    </div>
+                  </div>
+
+                  <!-- Caminho NÃO (Loop) -->
+                  <div class="flex flex-col items-center space-y-4">
+                    <div class="text-red-400 text-xs font-bold">NÃO</div>
+                    <div
+                      class="w-24 h-12 bg-orange-600 rounded-lg flex items-center justify-center text-white text-xs font-bold text-center"
+                    >
+                      Coletar<br />Mais
+                    </div>
+                    <!-- Seta de volta (representando o loop) -->
+                    <div class="flex items-center">
+                      <div class="w-16 h-0.5 bg-gray-600"></div>
+                      <div class="text-gray-400 text-xs ml-2">↰ Loop</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Seta de loop visual -->
+              <div
+                class="absolute top-40 right-4 w-12 h-32 border-2 border-dashed border-orange-500 rounded-r-full opacity-60"
+              ></div>
+            </div>
+          </div>
+          <p class="text-center text-xs text-gray-500 mt-4 italic">
+            Exemplo: Grafo com ciclo para refinamento de dados
+          </p>
+        </div>
+      </div>
+    </template>
+
+    <template id="template-vs">
+      <div class="p-8 md:p-12 max-w-5xl mx-auto fade-in">
+        <h2 class="text-3xl font-bold text-white mb-8 text-center">
+          LangChain vs. LangGraph
+        </h2>
+        <div class="grid md:grid-cols-2 gap-8 items-stretch">
+          <!-- LangChain -->
+          <div
+            class="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 relative overflow-hidden group"
+          >
+            <div
+              class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"
+            >
+              <i class="fas fa-link text-6xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-400 mb-4">
+              LangChain (Chains)
+            </h3>
+            <ul class="space-y-4 mb-8">
+              <li class="flex items-start gap-3 text-sm text-gray-500">
+                <i class="fas fa-check text-green-500 mt-1"></i> Sequência
+                Linear (DAG)
+              </li>
+              <li class="flex items-start gap-3 text-sm text-gray-500">
+                <i class="fas fa-check text-green-500 mt-1"></i> Foco em
+                "Caminho Feliz"
+              </li>
+              <li class="flex items-start gap-3 text-sm text-gray-500">
+                <i class="fas fa-times text-red-500 mt-1"></i> Difícil
+                implementar ciclos/repetição
+              </li>
+              <li class="flex items-start gap-3 text-sm text-gray-500">
+                <i class="fas fa-times text-red-500 mt-1"></i> Sem persistência
+                nativa de sessão
+              </li>
+            </ul>
+            <pre class="text-[10px]">
+# Pseudocódigo Chain
+chain = prompt | model | parser
+response = chain.invoke(input)</pre
+            >
+          </div>
+
+          <!-- LangGraph -->
+          <div
+            class="bg-orange-900/10 border-2 border-orange-500/50 rounded-2xl p-8 relative overflow-hidden group"
+          >
+            <div
+              class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"
+            >
+              <i class="fas fa-sync text-6xl text-orange-500"></i>
+            </div>
+            <h3 class="text-xl font-bold text-orange-400 mb-4">
+              LangGraph (State Machines)
+            </h3>
+            <ul class="space-y-4 mb-8">
+              <li class="flex items-start gap-3 text-sm text-gray-300">
+                <i class="fas fa-check text-orange-500 mt-1"></i> Suporte nativo
+                a Ciclos
+              </li>
+              <li class="flex items-start gap-3 text-sm text-gray-300">
+                <i class="fas fa-check text-orange-500 mt-1"></i> Gestão de
+                Estado Global
+              </li>
+              <li class="flex items-start gap-3 text-sm text-gray-300">
+                <i class="fas fa-check text-orange-500 mt-1"></i> Persistência
+                em DB (Checkpointers)
+              </li>
+              <li class="flex items-start gap-3 text-sm text-gray-300">
+                <i class="fas fa-check text-orange-500 mt-1"></i> Intervenção
+                Humana (Breakpoints)
+              </li>
+            </ul>
+            <pre class="text-[10px]">
+# Pseudocódigo Graph
+workflow = StateGraph(MyState)
+workflow.add_node("agent", call_model)
+workflow.add_edge("agent", END)</pre
+            >
+          </div>
+        </div>
+        <p class="text-center text-gray-500 text-xs mt-8 italic">
+          Engenheiros Sêniores escolhem LangGraph para fluxos que exigem
+          auditoria e controle de falhas.
+        </p>
+      </div>
+    </template>
+
+    <template id="template-state">
+      <div class="p-8 md:p-12 max-w-4xl mx-auto fade-in">
+        <h2 class="text-3xl font-bold text-white mb-6">
+          Gestão de Estado Profunda
+        </h2>
+        <p class="text-gray-400 mb-8">
+          O **State** é um dicionário tipado que evolui. No LangGraph, nós não
+          "mudamos" o estado; nós retornamos atualizações que são aplicadas ao
+          estado via **Redutores**.
+        </p>
+
+        <div class="space-y-6">
+          <div>
+            <h4 class="text-xs font-bold text-gray-500 uppercase mb-3">
+              Definição do Schema (Pydantic / TypedDict)
+            </h4>
+            <pre>
+from typing import TypedDict, Annotated
+from langgraph.graph import add_messages
+
+class CreditState(TypedDict):
+    # 'Annotated' permite usar funções de redução (ex: append nas mensagens)
+    messages: Annotated[list, add_messages] 
+    risk_score: int
+    manual_approval: bool
+    data_points: dict</pre
+            >
+          </div>
+
+          <div class="bg-gray-900 border border-gray-800 p-6 rounded-xl">
+            <h4 class="text-white font-bold mb-3">
+              Persistência (Checkpointers)
+            </h4>
+            <p class="text-sm text-gray-400 mb-4">
+              Imagine que um agente de crédito pare no meio de uma análise. Com
+              Checkpointers, você salva o `thread_id` no banco. Quando o usuário
+              volta 3 dias depois, o agente continua do bit exato onde parou.
+            </p>
+            <div class="flex items-center gap-4">
+              <div
+                class="bg-gray-950 p-3 rounded font-mono text-[10px] text-green-400 border border-gray-700"
+              >
+                saver = SqliteSaver.from_conn_string(":memory:")<br />
+                app = workflow.compile(checkpointer=saver)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="template-hitl">
+      <div class="p-8 md:p-12 max-w-4xl mx-auto fade-in">
+        <h2 class="text-3xl font-bold text-white mb-6">
+          Human-In-The-Loop (HITL)
+        </h2>
+        <div
+          class="bg-blue-900/10 border border-blue-500/30 p-6 rounded-xl mb-8"
+        >
+          <p class="text-blue-200 text-sm leading-relaxed">
+            Em bancos, decisões autônomas de alto risco são proibidas. O
+            LangGraph resolve isso com **Breakpoints**. O grafo pausa a execução
+            *antes* de um nó crítico, aguardando que um humano valide ou edite o
+            estado.
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-4 mb-8">
+          <div class="p-4 bg-gray-900 rounded-lg text-center">
+            <i class="fas fa-pause-circle text-orange-500 mb-2"></i>
+            <p class="text-xs font-bold text-white">Interrupt Before</p>
+            <p class="text-[10px] text-gray-500">Pausa antes do Nó</p>
+          </div>
+          <div class="p-4 bg-gray-900 rounded-lg text-center">
+            <i class="fas fa-edit text-blue-500 mb-2"></i>
+            <p class="text-xs font-bold text-white">State Update</p>
+            <p class="text-[10px] text-gray-500">Humano edita dados</p>
+          </div>
+          <div class="p-4 bg-gray-900 rounded-lg text-center">
+            <i class="fas fa-play text-green-500 mb-2"></i>
+            <p class="text-xs font-bold text-white">Resume Thread</p>
+            <p class="text-[10px] text-gray-500">Fluxo continua</p>
+          </div>
+        </div>
+
+        <pre class="mb-4">
+# Configurando interrupção no compilador
+app = workflow.compile(
+    checkpointer=memory,
+    interrupt_before=["approval_node"]
+)</pre
+        >
+      </div>
+    </template>
+
+    <template id="template-architecture">
+      <div class="p-8 md:p-12 max-w-6xl mx-auto fade-in">
+        <span
+          class="text-orange-500 text-xs font-bold uppercase tracking-widest"
+          >Arquitetura Avançada</span
+        >
+        <h2 class="text-4xl font-bold text-white mt-2 mb-6">
+          Grafos Distribuídos e Escalabilidade
+        </h2>
+        <p class="text-gray-400 leading-relaxed mb-8">
+          Para sistemas bancários críticos, um único processo não é suficiente.
+          Precisamos de <strong>Grafos Distribuídos</strong>
+          que podem ser particionados, replicados e executados em clusters
+          Kubernetes com garantias de consistência.
+        </p>
+
+        <!-- Grid de Conceitos Avançados -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          <div class="bg-gray-900 border-l-4 border-orange-500 p-6 rounded-xl">
+            <h4 class="text-orange-400 font-bold mb-3 flex items-center gap-2">
+              <i class="fas fa-network-wired"></i>Graph Partitioning
+            </h4>
+            <p class="text-sm text-gray-400 mb-3">
+              Dividir grafos grandes em subgrafos menores baseado em
+              <code>customer_id</code> ou <code>region</code>. Cada partição
+              roda em pods separados.
+            </p>
+            <div
+              class="bg-gray-950 p-3 rounded text-xs font-mono text-green-400"
+            >
+              partition_key = hash(customer_id) % N_WORKERS
+            </div>
+          </div>
+
+          <div class="bg-gray-900 border-l-4 border-blue-500 p-6 rounded-xl">
+            <h4 class="text-blue-400 font-bold mb-3 flex items-center gap-2">
+              <i class="fas fa-sync-alt"></i>Event Sourcing
+            </h4>
+            <p class="text-sm text-gray-400 mb-3">
+              Cada mudança de estado é um evento imutável. Permite auditoria
+              completa e replay de decisões.
+            </p>
+            <div
+              class="bg-gray-950 p-3 rounded text-xs font-mono text-blue-400"
+            >
+              {"event": "score_calculated", "value": 750, "timestamp": "..."}
+            </div>
+          </div>
+
+          <div class="bg-gray-900 border-l-4 border-purple-500 p-6 rounded-xl">
+            <h4 class="text-purple-400 font-bold mb-3 flex items-center gap-2">
+              <i class="fas fa-clock"></i>Temporal Workflows
+            </h4>
+            <p class="text-sm text-gray-400 mb-3">
+              Integração com Temporal.io para workflows de longa duração (30+
+              dias) com garantias de entrega.
+            </p>
+            <div
+              class="bg-gray-950 p-3 rounded text-xs font-mono text-purple-400"
+            >
+              @workflow.defn class CreditWorkflow
+            </div>
+          </div>
+        </div>
+
+        <!-- Seção de Persistência Avançada -->
+        <div
+          class="bg-gradient-to-r from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-8 mb-8"
+        >
+          <h3
+            class="text-2xl font-bold text-white mb-6 flex items-center gap-3"
+          >
+            <i class="fas fa-database text-orange-500"></i>Persistência
+            Multi-Tier
+          </h3>
+          <div class="grid md:grid-cols-2 gap-8">
+            <div>
+              <h4 class="text-lg font-bold text-gray-300 mb-4">
+                Hot Storage (Redis/Memory)
+              </h4>
+              <ul class="space-y-2 text-sm text-gray-400">
+                <li class="flex items-start gap-2">
+                  <i class="fas fa-check text-green-500 mt-1 text-xs"></i>
+                  Estados ativos (< 1 hora)
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="fas fa-check text-green-500 mt-1 text-xs"></i>
+                  Latência < 10ms para decisões críticas
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="fas fa-check text-green-500 mt-1 text-xs"></i>
+                  Replicação síncrona cross-AZ
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="text-lg font-bold text-gray-300 mb-4">
+                Cold Storage (PostgreSQL)
+              </h4>
+              <ul class="space-y-2 text-sm text-gray-400">
+                <li class="flex items-start gap-2">
+                  <i class="fas fa-archive text-yellow-500 mt-1 text-xs"></i>
+                  Estados arquivados (> 7 dias)
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="fas fa-archive text-yellow-500 mt-1 text-xs"></i>
+                  Compliance e auditoria
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="fas fa-archive text-yellow-500 mt-1 text-xs"></i>
+                  Particionamento por data
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Código de Configuração Avançada -->
+        <div class="bg-gray-950 border border-gray-800 rounded-xl p-6">
+          <h4 class="text-white font-bold mb-4 flex items-center gap-2">
+            <i class="fas fa-cogs text-orange-500"></i>Configuração
+            Production-Ready
+          </h4>
+          <pre
+            class="text-sm overflow-x-auto"
+          ><code class="text-gray-300"># graph_config.py
+from langgraph.checkpoint.postgres import PostgresSaver
+from langgraph.checkpoint.redis import RedisSaver
+from langgraph.pregel import Pregel
+
+class ProductionGraphConfig:
+    def __init__(self):
+        # Hot checkpointer para estados ativos
+        self.hot_saver = RedisSaver(
+            redis_url="redis://redis-cluster:6379",
+            ttl=3600  # 1 hora
+        )
+        
+        # Cold checkpointer para auditoria
+        self.cold_saver = PostgresSaver.from_conn_string(
+            "postgresql://user:pass@pg-primary:5432/langgraph"
+        )
+        
+    def get_compiler_config(self, thread_id: str):
+        # Roteamento baseado no thread_id
+        if self.is_active_session(thread_id):
+            return {"checkpointer": self.hot_saver}
+        return {"checkpointer": self.cold_saver}
+
+# Uso
+config = ProductionGraphConfig()
+app = workflow.compile(**config.get_compiler_config(thread_id))</code></pre>
+        </div>
+      </div>
+    </template>
+
+    <template id="template-patterns">
+      <div class="p-8 md:p-12 max-w-6xl mx-auto fade-in">
+        <span class="text-blue-500 text-xs font-bold uppercase tracking-widest"
+          >Design Patterns</span
+        >
+        <h2 class="text-4xl font-bold text-white mt-2 mb-6">
+          Padrões para Sistemas Financeiros
+        </h2>
+        <p class="text-gray-400 leading-relaxed mb-8">
+          Em engenharia bancária, não improvisamos. Usamos
+          <strong>padrões testados em produção</strong>
+          que garantem auditabilidade, recuperabilidade e conformidade
+          regulatória.
+        </p>
+
+        <!-- Padrão 1: Circuit Breaker -->
+        <div
+          class="bg-red-900/10 border border-red-500/30 rounded-2xl p-8 mb-8"
+        >
+          <h3
+            class="text-2xl font-bold text-red-400 mb-4 flex items-center gap-3"
+          >
+            <i class="fas fa-exclamation-triangle"></i>1. Circuit Breaker
+            Pattern
+          </h3>
+          <p class="text-gray-300 mb-6">
+            Quando um serviço externo (Bureau de Crédito, SPC) falha, o grafo
+            não deve travar. Implementamos circuit breakers que
+            <strong>falham rápido</strong> e usam dados em cache.
+          </p>
+
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <h4 class="text-sm font-bold text-gray-400 mb-3">
+                Estados do Circuit Breaker
+              </h4>
+              <div class="space-y-3">
+                <div
+                  class="flex items-center gap-3 p-3 bg-green-900/20 border border-green-500/30 rounded-lg"
+                >
+                  <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span class="text-sm text-green-300"
+                    ><strong>CLOSED:</strong> Funcionando normal</span
+                  >
+                </div>
+                <div
+                  class="flex items-center gap-3 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg"
+                >
+                  <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <span class="text-sm text-yellow-300"
+                    ><strong>OPEN:</strong> Muitas falhas, usando fallback</span
+                  >
+                </div>
+                <div
+                  class="flex items-center gap-3 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg"
+                >
+                  <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span class="text-sm text-blue-300"
+                    ><strong>HALF-OPEN:</strong> Testando recuperação</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div>
+              <pre
+                class="text-xs bg-gray-950 p-4 rounded border border-gray-700"
+              ><code class="text-gray-300">class ExternalAPINode:
+    def __init__(self):
+        self.circuit = CircuitBreaker(
+            failure_threshold=5,
+            timeout=30,
+            expected_exception=APIException
+        )
+    
+    def call_bureau(self, cpf: str):
+        try:
+            return self.circuit.call(
+                bureau_api.get_score, cpf
+            )
+        except CircuitBreakerOpenException:
+            # Usar dados em cache ou score conservador
+            return self.get_fallback_score(cpf)</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Padrão 2: Saga Pattern -->
+        <div
+          class="bg-purple-900/10 border border-purple-500/30 rounded-2xl p-8 mb-8"
+        >
+          <h3
+            class="text-2xl font-bold text-purple-400 mb-4 flex items-center gap-3"
+          >
+            <i class="fas fa-undo"></i>2. Saga Pattern (Compensação)
+          </h3>
+          <p class="text-gray-300 mb-6">
+            Para operações que tocam múltiplos sistemas (conta, cartão, seguro),
+            precisamos de <strong>transações distribuídas</strong>
+            com compensação automática em caso de falha.
+          </p>
+
+          <div class="grid lg:grid-cols-3 gap-6">
+            <div class="bg-gray-900 p-6 rounded-xl">
+              <h4 class="text-purple-300 font-bold mb-3">1. Reservar Limite</h4>
+              <p class="text-xs text-gray-400 mb-3">
+                Bloquear R$ 50k no core bancário
+              </p>
+              <div
+                class="bg-gray-950 p-2 rounded text-xs text-green-400 font-mono"
+              >
+                reserve_limit(50000)
+              </div>
+              <div class="mt-2 text-xs text-red-400 font-mono">
+                💀 compensate: release_limit()
+              </div>
+            </div>
+
+            <div class="bg-gray-900 p-6 rounded-xl">
+              <h4 class="text-purple-300 font-bold mb-3">2. Criar Contrato</h4>
+              <p class="text-xs text-gray-400 mb-3">
+                Gerar PDF e assinar digitalmente
+              </p>
+              <div
+                class="bg-gray-950 p-2 rounded text-xs text-green-400 font-mono"
+              >
+                sign_contract(pdf_id)
+              </div>
+              <div class="mt-2 text-xs text-red-400 font-mono">
+                💀 compensate: void_contract()
+              </div>
+            </div>
+
+            <div class="bg-gray-900 p-6 rounded-xl">
+              <h4 class="text-purple-300 font-bold mb-3">
+                3. Notificar Cliente
+              </h4>
+              <p class="text-xs text-gray-400 mb-3">
+                SMS + Email + Push notification
+              </p>
+              <div
+                class="bg-gray-950 p-2 rounded text-xs text-green-400 font-mono"
+              >
+                send_approval_sms()
+              </div>
+              <div class="mt-2 text-xs text-red-400 font-mono">
+                💀 compensate: send_cancellation()
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 bg-gray-950 border border-gray-700 rounded-lg p-4">
+            <pre
+              class="text-xs"
+            ><code class="text-gray-300">class CreditApprovalSaga:
+    async def execute_saga(self, state: CreditState):
+        saga_id = uuid4()
+        
+        try:
+            # Step 1
+            await self.reserve_limit(state.amount)
+            self.register_compensator(saga_id, "release_limit")
+            
+            # Step 2  
+            await self.create_contract(state.customer_id)
+            self.register_compensator(saga_id, "void_contract")
+            
+            # Step 3
+            await self.notify_approval(state.customer_id)
+            
+        except Exception as e:
+            # Executar todas as compensações na ordem reversa
+            await self.compensate_saga(saga_id)
+            raise SagaCompensationException(f"Saga {saga_id} compensated")</code></pre>
+          </div>
+        </div>
+
+        <!-- Padrão 3: Event Sourcing -->
+        <div class="bg-green-900/10 border border-green-500/30 rounded-2xl p-8">
+          <h3
+            class="text-2xl font-bold text-green-400 mb-4 flex items-center gap-3"
+          >
+            <i class="fas fa-history"></i>3. Event Sourcing Pattern
+          </h3>
+          <p class="text-gray-300 mb-6">
+            Em sistemas bancários,
+            <strong>toda mudança deve ser auditável</strong>. Event Sourcing
+            garante que possamos reconstituir o estado exato de qualquer decisão
+            de crédito, mesmo anos depois.
+          </p>
+
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <h4 class="text-sm font-bold text-gray-400 mb-3">
+                Stream de Eventos
+              </h4>
+              <div class="space-y-2 text-xs">
+                <div class="bg-blue-950 p-3 rounded border-l-4 border-blue-500">
+                  <strong class="text-blue-400"
+                    >CreditApplicationStarted</strong
+                  >
+                  <div class="text-gray-400 mt-1">
+                    {"customer_id": "12345", "amount": 50000}
+                  </div>
+                </div>
+                <div
+                  class="bg-yellow-950 p-3 rounded border-l-4 border-yellow-500"
+                >
+                  <strong class="text-yellow-400">ScoreCalculated</strong>
+                  <div class="text-gray-400 mt-1">
+                    {"score": 750, "source": "spc", "timestamp": "..."}
+                  </div>
+                </div>
+                <div class="bg-red-950 p-3 rounded border-l-4 border-red-500">
+                  <strong class="text-red-400">ManualReviewRequired</strong>
+                  <div class="text-gray-400 mt-1">
+                    {"reason": "high_amount", "assigned_to": "analyst_01"}
+                  </div>
+                </div>
+                <div
+                  class="bg-green-950 p-3 rounded border-l-4 border-green-500"
+                >
+                  <strong class="text-green-400">CreditApproved</strong>
+                  <div class="text-gray-400 mt-1">
+                    {"final_amount": 45000, "approved_by": "manager_02"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 class="text-sm font-bold text-gray-400 mb-3">
+                Implementação LangGraph
+              </h4>
+              <pre
+                class="text-xs bg-gray-950 p-4 rounded border border-gray-700"
+              ><code class="text-gray-300">class EventSourcedState(TypedDict):
+    events: Annotated[list[Event], append_events]
+    current_state: dict
+    
+def append_events(existing: list, new: list):
+    """Reducer que nunca sobrescreve eventos"""
+    return existing + new
+    
+def scoring_node(state: EventSourcedState):
+    score = calculate_score(state["current_state"])
+    
+    # Gerar evento imutável
+    event = ScoreCalculatedEvent(
+        timestamp=datetime.utcnow(),
+        score=score,
+        source="internal_model"
+    )
+    
+    # Aplicar evento ao estado
+    new_state = apply_event(state["current_state"], event)
+    
+    return {
+        "events": [event],  # Será appendado
+        "current_state": new_state
+    }</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="template-observability">
+      <div class="p-8 md:p-12 max-w-6xl mx-auto fade-in">
+        <span class="text-green-500 text-xs font-bold uppercase tracking-widest"
+          >Observabilidade</span
+        >
+        <h2 class="text-4xl font-bold text-white mt-2 mb-6">
+          Debugging e Monitoramento Avançado
+        </h2>
+        <p class="text-gray-400 leading-relaxed mb-8">
+          Em produção bancária, <strong>não basta funcionar</strong>. Precisamos
+          de visibilidade total: onde o grafo está, por que parou, quanto tempo
+          cada nó demorou, e se algum dado está vazando.
+        </p>
+
+        <!-- Métricas e Logs -->
+        <div class="grid md:grid-cols-2 gap-8 mb-8">
+          <div
+            class="bg-gradient-to-br from-green-900/20 to-green-800/10 border border-green-500/30 rounded-2xl p-6"
+          >
+            <h3
+              class="text-xl font-bold text-green-400 mb-4 flex items-center gap-2"
+            >
+              <i class="fas fa-chart-line"></i>OpenTelemetry Integration
+            </h3>
+            <p class="text-gray-300 text-sm mb-4">
+              Rastreamento distribuído com spans personalizados para cada nó do
+              grafo. Compatible com Jaeger, Zipkin, e Datadog APM.
+            </p>
+            <pre
+              class="text-xs bg-gray-950 p-4 rounded border border-green-700/50"
+            ><code class="text-green-300">from opentelemetry import trace
+from langgraph.pregel.instrumentation import LangGraphInstrumentation
+
+# Setup automático de tracing
+LangGraphInstrumentation().instrument()
+
+def scoring_node(state):
+    tracer = trace.get_tracer(__name__)
+    with tracer.start_as_current_span(
+        "scoring_node",
+        attributes={
+            "customer.id": state.get("customer_id"),
+            "risk.level": state.get("risk_level")
+        }
+    ) as span:
+        score = calculate_score(state)
+        span.set_attribute("score.value", score)
+        return {"score": score}</code></pre>
+          </div>
+
+          <div
+            class="bg-gradient-to-br from-blue-900/20 to-blue-800/10 border border-blue-500/30 rounded-2xl p-6"
+          >
+            <h3
+              class="text-xl font-bold text-blue-400 mb-4 flex items-center gap-2"
+            >
+              <i class="fas fa-bug"></i>Structured Logging
+            </h3>
+            <p class="text-gray-300 text-sm mb-4">
+              Logs JSON estruturados com correlation IDs para rastrear threads
+              entre microsserviços. Integração com ELK Stack.
+            </p>
+            <pre
+              class="text-xs bg-gray-950 p-4 rounded border border-blue-700/50"
+            ><code class="text-blue-300">import structlog
+from contextvars import ContextVar
+
+# Context var para thread tracking
+thread_context: ContextVar[str] = ContextVar('thread_id')
+
+logger = structlog.get_logger()
+
+def risk_assessment_node(state):
+    thread_id = state.get("thread_id")
+    thread_context.set(thread_id)
+    
+    logger.info(
+        "risk_assessment_started",
+        thread_id=thread_id,
+        customer_id=state["customer_id"],
+        input_score=state.get("score")
+    )
+    
+    try:
+        risk_level = assess_risk(state)
+        logger.info(
+            "risk_assessment_completed",
+            risk_level=risk_level,
+            processing_time_ms=timer.elapsed()
+        )
+        return {"risk_level": risk_level}
+    except Exception as e:
+        logger.error(
+            "risk_assessment_failed",
+            error=str(e),
+            error_type=type(e).__name__
+        )
+        raise</code></pre>
+          </div>
+        </div>
+
+        <!-- Dashboard de Métricas -->
+        <div class="bg-gray-900 border border-gray-700 rounded-2xl p-8 mb-8">
+          <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <i class="fas fa-tachometer-alt text-orange-500"></i>Métricas
+            Críticas para SRE
+          </h3>
+          <div class="grid lg:grid-cols-4 gap-6">
+            <div class="text-center">
+              <div
+                class="bg-green-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3"
+              >
+                <i class="fas fa-clock text-white text-xl"></i>
+              </div>
+              <h4 class="text-green-400 font-bold text-sm">Latência P99</h4>
+              <p class="text-2xl font-bold text-white">< 200ms</p>
+              <p class="text-xs text-gray-500">Por nó do grafo</p>
+            </div>
+            <div class="text-center">
+              <div
+                class="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3"
+              >
+                <i class="fas fa-percentage text-white text-xl"></i>
+              </div>
+              <h4 class="text-blue-400 font-bold text-sm">Taxa de Sucesso</h4>
+              <p class="text-2xl font-bold text-white">99.95%</p>
+              <p class="text-xs text-gray-500">SLA contratual</p>
+            </div>
+            <div class="text-center">
+              <div
+                class="bg-purple-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3"
+              >
+                <i class="fas fa-users text-white text-xl"></i>
+              </div>
+              <h4 class="text-purple-400 font-bold text-sm">Threads Ativas</h4>
+              <p class="text-2xl font-bold text-white">1,247</p>
+              <p class="text-xs text-gray-500">Concorrência atual</p>
+            </div>
+            <div class="text-center">
+              <div
+                class="bg-red-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3"
+              >
+                <i class="fas fa-exclamation-triangle text-white text-xl"></i>
+              </div>
+              <h4 class="text-red-400 font-bold text-sm">Alerts Ativos</h4>
+              <p class="text-2xl font-bold text-white">0</p>
+              <p class="text-xs text-gray-500">PagerDuty/OpsGenie</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Debugging Tools -->
+        <div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
+          <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-tools text-orange-500"></i>Ferramentas de Debugging
+          </h3>
+          <div class="grid md:grid-cols-3 gap-6">
+            <div>
+              <h4 class="text-sm font-bold text-gray-300 mb-3">
+                1. State Inspector
+              </h4>
+              <p class="text-xs text-gray-400 mb-3">
+                Visualizar estado completo em qualquer ponto da execução
+              </p>
+              <div class="bg-gray-950 p-3 rounded border border-gray-600">
+                <code class="text-xs text-green-400"
+                  ># langgraph debug state-inspect --thread=abc123</code
+                >
+              </div>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-gray-300 mb-3">
+                2. Graph Visualizer
+              </h4>
+              <p class="text-xs text-gray-400 mb-3">
+                Mermaid diagrams gerados automaticamente do grafo
+              </p>
+              <div class="bg-gray-950 p-3 rounded border border-gray-600">
+                <code class="text-xs text-blue-400"
+                  ># app.get_graph().draw_mermaid()</code
+                >
+              </div>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-gray-300 mb-3">
+                3. Replay Mode
+              </h4>
+              <p class="text-xs text-gray-400 mb-3">
+                Re-executar threads com dados de produção
+              </p>
+              <div class="bg-gray-950 p-3 rounded border border-gray-600">
+                <code class="text-xs text-purple-400"
+                  ># langgraph replay --from-checkpoint=cp_123</code
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="template-security">
+      <div class="p-8 md:p-12 max-w-6xl mx-auto fade-in">
+        <span class="text-red-500 text-xs font-bold uppercase tracking-widest"
+          >Segurança & Compliance</span
+        >
+        <h2 class="text-4xl font-bold text-white mt-2 mb-6">
+          Proteção de Dados e Auditoria
+        </h2>
+        <p class="text-gray-400 leading-relaxed mb-8">
+          Sistemas bancários operam sob
+          <strong>regulamentações rígidas</strong>: LGPD, PCI-DSS, Basel III. O
+          LangGraph precisa ser configurado para atender todas as exigências de
+          compliance.
+        </p>
+
+        <!-- Criptografia e Proteção de Dados -->
+        <div class="grid lg:grid-cols-2 gap-8 mb-8">
+          <div class="bg-red-900/10 border border-red-500/30 rounded-2xl p-6">
+            <h3
+              class="text-xl font-bold text-red-400 mb-4 flex items-center gap-2"
+            >
+              <i class="fas fa-lock"></i>Criptografia de Estado
+            </h3>
+            <p class="text-gray-300 text-sm mb-4">
+              Estados que contêm PII (CPF, dados bancários) são criptografados
+              em repouso e em trânsito usando AES-256-GCM com chaves
+              rotacionadas pelo AWS KMS.
+            </p>
+            <pre
+              class="text-xs bg-gray-950 p-4 rounded border border-red-700/50"
+            ><code class="text-red-300">from langgraph.checkpoint.postgres import PostgresSaver
+from cryptography.fernet import Fernet
+import boto3
+
+class EncryptedPostgresSaver(PostgresSaver):
+    def __init__(self, conn_string: str, kms_key_id: str):
+        super().__init__(conn_string)
+        self.kms = boto3.client('kms')
+        self.key_id = kms_key_id
+        
+    def _encrypt_state(self, state: dict) -> bytes:
+        # Gerar chave temporária via KMS
+        data_key = self.kms.generate_data_key(
+            KeyId=self.key_id,
+            KeySpec='AES_256'
+        )
+        
+        fernet = Fernet(base64.urlsafe_b64encode(
+            data_key['Plaintext'][:32]
+        ))
+        
+        return fernet.encrypt(
+            json.dumps(state).encode('utf-8')
+        )
+        
+    def put(self, config, checkpoint, metadata):
+        # Criptografar antes de salvar
+        encrypted_checkpoint = self._encrypt_state(checkpoint)
+        return super().put(config, encrypted_checkpoint, metadata)</code></pre>
+          </div>
+
+          <div
+            class="bg-yellow-900/10 border border-yellow-500/30 rounded-2xl p-6"
+          >
+            <h3
+              class="text-xl font-bold text-yellow-400 mb-4 flex items-center gap-2"
+            >
+              <i class="fas fa-eye-slash"></i>Data Masking & Anonymization
+            </h3>
+            <p class="text-gray-300 text-sm mb-4">
+              Dados sensíveis são mascarados em logs e traces. Implementação de
+              differential privacy para análises estatísticas.
+            </p>
+            <pre
+              class="text-xs bg-gray-950 p-4 rounded border border-yellow-700/50"
+            ><code class="text-yellow-300">class PIIMaskingNode:
+    SENSITIVE_FIELDS = ['cpf', 'account_number', 'phone']
+    
+    def mask_state_for_logging(self, state: dict) -> dict:
+        masked = state.copy()
+        
+        for field in self.SENSITIVE_FIELDS:
+            if field in masked:
+                if field == 'cpf':
+                    # CPF: 123.456.789-01 -> 123.***.***-01  
+                    masked[field] = self.mask_cpf(masked[field])
+                elif field == 'account_number':
+                    # Conta: só últimos 4 dígitos
+                    masked[field] = "****" + masked[field][-4:]
+                    
+        return masked
+        
+    def execute_node(self, state: dict):
+        # Log estado mascarado
+        logger.info(
+            "node_execution",
+            masked_state=self.mask_state_for_logging(state)
+        )
+        
+        # Processar com estado real (não mascarado)
+        result = self.process(state)
+        return result</code></pre>
+          </div>
+        </div>
+
+        <!-- Auditoria e Compliance -->
+        <div
+          class="bg-blue-900/10 border border-blue-500/30 rounded-2xl p-8 mb-8"
+        >
+          <h3
+            class="text-2xl font-bold text-blue-400 mb-6 flex items-center gap-3"
+          >
+            <i class="fas fa-gavel"></i>Trilha de Auditoria Completa
+          </h3>
+          <p class="text-gray-300 mb-6">
+            Cada decisão de crédito gera <strong>trilhas imutáveis</strong> que
+            atendem aos requerimentos do Banco Central e auditorias externas.
+          </p>
+
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <h4 class="text-blue-300 font-bold mb-4">
+                Eventos de Auditoria Obrigatórios
+              </h4>
+              <div class="space-y-3">
+                <div
+                  class="bg-gray-900 p-3 rounded border-l-4 border-green-500"
+                >
+                  <div class="text-green-400 font-bold text-sm">
+                    ✓ Início do Processo
+                  </div>
+                  <div class="text-xs text-gray-400 mt-1">
+                    Timestamp, usuário, canal de origem
+                  </div>
+                </div>
+                <div class="bg-gray-900 p-3 rounded border-l-4 border-blue-500">
+                  <div class="text-blue-400 font-bold text-sm">
+                    📊 Consultas Externas
+                  </div>
+                  <div class="text-xs text-gray-400 mt-1">
+                    SPC, Serasa, BACEN - com hash dos dados
+                  </div>
+                </div>
+                <div
+                  class="bg-gray-900 p-3 rounded border-l-4 border-yellow-500"
+                >
+                  <div class="text-yellow-400 font-bold text-sm">
+                    👤 Intervenções Humanas
+                  </div>
+                  <div class="text-xs text-gray-400 mt-1">
+                    Usuário, justificativa, alterações
+                  </div>
+                </div>
+                <div
+                  class="bg-gray-900 p-3 rounded border-l-4 border-purple-500"
+                >
+                  <div class="text-purple-400 font-bold text-sm">
+                    ⚖️ Decisão Final
+                  </div>
+                  <div class="text-xs text-gray-400 mt-1">
+                    Aprovado/negado, valor, prazo, responsável
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 class="text-blue-300 font-bold mb-4">
+                Implementação Blockchain
+              </h4>
+              <pre
+                class="text-xs bg-gray-950 p-4 rounded border border-blue-700/50"
+              ><code class="text-blue-300">class AuditBlockchain:
+    def __init__(self, hyperledger_channel: str):
+        self.channel = hyperledger_channel
+        
+    def record_decision(self, thread_id: str, decision_data: dict):
+        # Criar hash da decisão
+        decision_hash = hashlib.sha256(
+            json.dumps(decision_data, sort_keys=True).encode()
+        ).hexdigest()
+        
+        # Submeter para Hyperledger Fabric
+        transaction = {
+            "thread_id": thread_id,
+            "timestamp": datetime.utcnow().isoformat(),
+            "decision_hash": decision_hash,
+            "node_path": decision_data["execution_path"],
+            "final_state_hash": decision_data["state_hash"]
+        }
+        
+        # Transação imutável no blockchain
+        return self.submit_transaction(
+            "record_credit_decision", 
+            transaction
+        )
+        
+    def verify_integrity(self, thread_id: str) -> bool:
+        # Verificar se decisão não foi alterada
+        blockchain_record = self.query_decision(thread_id)
+        current_state = self.rebuild_state_from_events(thread_id)
+        
+        return blockchain_record["state_hash"] == \
+               self.hash_state(current_state)</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controle de Acesso -->
+        <div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
+          <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-key text-orange-500"></i>Controle de Acesso
+            Granular
+          </h3>
+          <div class="grid md:grid-cols-3 gap-6">
+            <div class="text-center">
+              <div
+                class="bg-green-600 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3"
+              >
+                <i class="fas fa-user-check text-white"></i>
+              </div>
+              <h4 class="text-green-400 font-bold mb-2">Analista Jr</h4>
+              <p class="text-xs text-gray-400">
+                Pode iniciar processos até R$ 10k. Não pode aprovar.
+              </p>
+            </div>
+            <div class="text-center">
+              <div
+                class="bg-blue-600 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3"
+              >
+                <i class="fas fa-user-tie text-white"></i>
+              </div>
+              <h4 class="text-blue-400 font-bold mb-2">Gerente</h4>
+              <p class="text-xs text-gray-400">
+                Aprovação até R$ 100k. Pode alterar políticas de risco.
+              </p>
+            </div>
+            <div class="text-center">
+              <div
+                class="bg-purple-600 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3"
+              >
+                <i class="fas fa-user-shield text-white"></i>
+              </div>
+              <h4 class="text-purple-400 font-bold mb-2">Diretor</h4>
+              <p class="text-xs text-gray-400">
+                Aprovação ilimitada. Acesso a todos os threads e auditoria.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="template-cases">
+      <div class="p-8 md:p-12 max-w-6xl mx-auto fade-in">
+        <span class="text-blue-600 text-xs font-bold uppercase tracking-widest"
+          >Casos de Uso</span
+        >
+        <h2 class="text-4xl font-bold text-white mt-2 mb-6">
+          Aplicações Bancárias Específicas
+        </h2>
+        <p class="text-gray-400 leading-relaxed mb-8">
+          Além de crédito, o LangGraph resolve
+          <strong>problemas complexos</strong> em todas as áreas bancárias:
+          detecção de fraude, onboarding, compliance, risco de mercado, e
+          atendimento.
+        </p>
+
+        <!-- Casos por Área -->
+        <div class="space-y-8">
+          <!-- Caso 1: Detecção de Fraude -->
+          <div
+            class="bg-gradient-to-r from-red-900/20 to-red-800/10 border border-red-500/30 rounded-2xl p-8"
+          >
+            <h3
+              class="text-2xl font-bold text-red-400 mb-4 flex items-center gap-3"
+            >
+              <i class="fas fa-shield-alt"></i>1. Detecção de Fraude em Tempo
+              Real
+            </h3>
+            <p class="text-gray-300 mb-6">
+              Sistema que monitora transações PIX em tempo real. Se detecta
+              padrão suspeito, pode
+              <strong
+                >bloquear a transação, solicitar 2FA adicional, ou escalar para
+                investigação</strong
+              >.
+            </p>
+
+            <div class="grid lg:grid-cols-3 gap-6">
+              <div class="bg-gray-900 p-6 rounded-xl border border-red-700/30">
+                <h4 class="text-red-300 font-bold mb-3">🚨 Inputs do Grafo</h4>
+                <ul class="text-sm text-gray-400 space-y-2">
+                  <li>• Valor da transação</li>
+                  <li>• Horário (ex: 3h da madrugada)</li>
+                  <li>• Geolocalização do celular</li>
+                  <li>• Histórico do cliente (30 dias)</li>
+                  <li>• Lista de contas favorecidas</li>
+                </ul>
+              </div>
+
+              <div class="bg-gray-900 p-6 rounded-xl border border-red-700/30">
+                <h4 class="text-red-300 font-bold mb-3">⚡ Fluxo do Grafo</h4>
+                <div class="text-sm text-gray-400 space-y-2">
+                  <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span>Score ML (0-100)</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                    <span>Regras de negócio</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <span>Decisão: bloquear/liberar</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 bg-purple-500 rounded-full"></div>
+                    <span>HITL se score 60-80</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-gray-900 p-6 rounded-xl border border-red-700/30">
+                <h4 class="text-red-300 font-bold mb-3">📊 Resultados</h4>
+                <div class="text-sm text-gray-400 space-y-2">
+                  <div class="text-green-400">✓ 99.2% precisão</div>
+                  <div class="text-green-400">✓ < 50ms latência</div>
+                  <div class="text-green-400">
+                    ✓ 87% redução em falsos positivos
+                  </div>
+                  <div class="text-yellow-400">⚠️ 12% taxa de HITL</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Caso 2: Onboarding Digital -->
+          <div
+            class="bg-gradient-to-r from-blue-900/20 to-blue-800/10 border border-blue-500/30 rounded-2xl p-8"
+          >
+            <h3
+              class="text-2xl font-bold text-blue-400 mb-4 flex items-center gap-3"
+            >
+              <i class="fas fa-user-plus"></i>2. Onboarding Digital Completo
+            </h3>
+            <p class="text-gray-300 mb-6">
+              Processo de abertura de conta que integra
+              <strong
+                >OCR de documentos, face matching, consultas ao SPC, validação
+                de endereço, e configuração de produtos</strong
+              >.
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <h4 class="text-blue-300 font-bold mb-4">Jornada do Cliente</h4>
+                <div class="space-y-3">
+                  <div
+                    class="flex items-center gap-3 p-3 bg-gray-900 rounded-lg"
+                  >
+                    <div
+                      class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-sm font-bold"
+                    >
+                      1
+                    </div>
+                    <span class="text-gray-300 text-sm"
+                      >Foto do CPF → OCR + validação</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-3 p-3 bg-gray-900 rounded-lg"
+                  >
+                    <div
+                      class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-sm font-bold"
+                    >
+                      2
+                    </div>
+                    <span class="text-gray-300 text-sm"
+                      >Selfie → Face matching com CPF</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-3 p-3 bg-gray-900 rounded-lg"
+                  >
+                    <div
+                      class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-sm font-bold"
+                    >
+                      3
+                    </div>
+                    <span class="text-gray-300 text-sm"
+                      >Consultas SPC/Serasa automáticas</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-3 p-3 bg-gray-900 rounded-lg"
+                  >
+                    <div
+                      class="w-8 h-8 bg-yellow-600 rounded-full flex items-center justify-center text-sm font-bold"
+                    >
+                      4
+                    </div>
+                    <span class="text-gray-300 text-sm"
+                      >HITL para casos limítrofes</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-3 p-3 bg-gray-900 rounded-lg"
+                  >
+                    <div
+                      class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-sm font-bold"
+                    >
+                      5
+                    </div>
+                    <span class="text-gray-300 text-sm"
+                      >Criação de conta + produtos</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 class="text-blue-300 font-bold mb-4">
+                  Integrações Técnicas
+                </h4>
+                <pre
+                  class="text-xs bg-gray-950 p-4 rounded border border-blue-700/50"
+                ><code class="text-blue-300">class OnboardingWorkflow:
+    def __init__(self):
+        self.ocr_service = AmazonTextract()
+        self.face_service = AWSRekognition()
+        self.bureau_api = ServicoProtecaoCreditoAPI()
+        self.core_banking = CoreBankingAPI()
+        
+    def document_validation_node(self, state):
+        # OCR do documento enviado
+        ocr_data = self.ocr_service.extract_text(
+            state["document_image"]
+        )
+        
+        # Validação dos dados extraídos
+        cpf_valid = self.validate_cpf(ocr_data.cpf)
+        
+        if not cpf_valid:
+            return {"status": "rejected", 
+                   "reason": "cpf_invalid"}
+        
+        return {"extracted_data": ocr_data,
+               "status": "document_ok"}
+        
+    def risk_assessment_node(self, state):
+        # Consultar histórico de crédito
+        bureau_data = self.bureau_api.query(
+            state["extracted_data"].cpf
+        )
+        
+        # Score de risco personalizado
+        risk_score = calculate_onboarding_risk(
+            state["extracted_data"],
+            bureau_data
+        )
+        
+        if 300 <= risk_score <= 700:
+            # Zona cinzenta - precisa de humano
+            return {"risk_score": risk_score,
+                   "needs_human_review": True}
+        
+        return {"risk_score": risk_score,
+               "auto_approved": risk_score > 700}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Caso 3: Risco de Mercado -->
+          <div
+            class="bg-gradient-to-r from-purple-900/20 to-purple-800/10 border border-purple-500/30 rounded-2xl p-8"
+          >
+            <h3
+              class="text-2xl font-bold text-purple-400 mb-4 flex items-center gap-3"
+            >
+              <i class="fas fa-chart-area"></i>3. Gestão de Risco de Mercado
+            </h3>
+            <p class="text-gray-300 mb-6">
+              Monitoramento contínuo da carteira de investimentos do banco. O
+              grafo recalcula
+              <strong>VaR (Value at Risk)</strong> a cada mudança de mercado e
+              executa hedging automático.
+            </p>
+
+            <div class="grid lg:grid-cols-2 gap-6">
+              <div className="bg-gray-900 p-6 rounded-xl">
+                <h4 class="text-purple-300 font-bold mb-4">
+                  Gatilhos de Rebalanceamento
+                </h4>
+                <ul class="space-y-2 text-sm text-gray-400">
+                  <li class="flex items-start gap-2">
+                    <i class="fas fa-arrow-up text-red-500 mt-1"></i>
+                    <span
+                      ><strong>VaR > 2%</strong> do patrimônio: venda automática
+                      de posições arriscadas</span
+                    >
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <i class="fas fa-exclamation text-yellow-500 mt-1"></i>
+                    <span
+                      ><strong>Correlação > 0.8</strong> entre ativos:
+                      diversificar automaticamente</span
+                    >
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <i class="fas fa-clock text-blue-500 mt-1"></i>
+                    <span
+                      ><strong>Volatilidade intraday > 5%</strong>: pausar novos
+                      investimentos</span
+                    >
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <i class="fas fa-user text-green-500 mt-1"></i>
+                    <span
+                      ><strong>Perdas > R$ 1M</strong>: intervenção obrigatória
+                      do risk manager</span
+                    >
+                  </li>
+                </ul>
+              </div>
+
+              <div class="bg-gray-900 p-6 rounded-xl">
+                <h4 class="text-purple-300 font-bold mb-4">
+                  Arquitetura em Tempo Real
+                </h4>
+                <div class="space-y-4 text-xs">
+                  <div
+                    class="p-3 bg-gray-950 rounded border border-purple-700/50"
+                  >
+                    <div class="text-purple-400 font-bold">
+                      📡 Data Ingestion
+                    </div>
+                    <div class="text-gray-400 mt-1">
+                      Bloomberg API + Reuters + Yahoo Finance
+                    </div>
+                    <div class="text-gray-500">
+                      Kafka streams, 100ms latência
+                    </div>
+                  </div>
+                  <div
+                    class="p-3 bg-gray-950 rounded border border-purple-700/50"
+                  >
+                    <div class="text-purple-400 font-bold">
+                      🧮 Risk Calculation
+                    </div>
+                    <div class="text-gray-400 mt-1">
+                      Monte Carlo 10k simulações
+                    </div>
+                    <div class="text-gray-500">
+                      GPU cluster, 2-5s por recálculo
+                    </div>
+                  </div>
+                  <div
+                    class="p-3 bg-gray-950 rounded border border-purple-700/50"
+                  >
+                    <div class="text-purple-400 font-bold">
+                      ⚡ Decision Engine
+                    </div>
+                    <div class="text-gray-400 mt-1">
+                      LangGraph determina ações
+                    </div>
+                    <div class="text-gray-500">Auto-hedge vs HITL</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="template-advanced">
+      <div class="p-8 md:p-12 max-w-6xl mx-auto fade-in">
+        <span
+          class="text-indigo-500 text-xs font-bold uppercase tracking-widest"
+          >Tópicos Avançados</span
+        >
+        <h2 class="text-4xl font-bold text-white mt-2 mb-6">
+          LangGraph: Recursos Enterprise
+        </h2>
+        <p class="text-gray-400 leading-relaxed mb-8">
+          Além dos conceitos básicos, o LangGraph oferece
+          <strong>recursos avançados essenciais</strong>
+          para sistemas bancários: roteamento condicional complexo, composição
+          de subgrafos, integração com ferramentas externas e coordenação
+          multi-agente.
+        </p>
+
+        <!-- Conditional Edges & Router Functions -->
+        <div
+          class="bg-indigo-900/10 border border-indigo-500/30 rounded-2xl p-8 mb-8"
+        >
+          <h3
+            class="text-2xl font-bold text-indigo-400 mb-6 flex items-center gap-3"
+          >
+            <i class="fas fa-code-branch"></i>Conditional Edges & Roteamento
+            Complexo
+          </h3>
+          <p class="text-gray-300 mb-6">
+            Roteamento dinâmico baseado em
+            <strong>múltiplas condições simultâneas</strong>. Essencial para
+            fluxos bancários com dezenas de cenários diferentes.
+          </p>
+
+          <div class="grid lg:grid-cols-2 gap-6">
+            <div>
+              <h4 class="text-indigo-300 font-bold mb-4">
+                Exemplo: Roteamento de Crédito
+              </h4>
+              <div class="bg-gray-900 p-4 rounded-xl mb-4">
+                <div class="grid grid-cols-2 gap-4 text-xs">
+                  <div class="bg-green-950 p-3 rounded border border-green-700">
+                    <strong class="text-green-400">VIP + Score > 800</strong>
+                    <div class="text-gray-400 mt-1">→ Fast Track (2 min)</div>
+                  </div>
+                  <div class="bg-red-950 p-3 rounded border border-red-700">
+                    <strong class="text-red-400"
+                      >Valor > 100k OR Score < 300</strong
+                    >
+                    <div class="text-gray-400 mt-1">→ Revisão Manual</div>
+                  </div>
+                  <div
+                    class="bg-yellow-950 p-3 rounded border border-yellow-700"
+                  >
+                    <strong class="text-yellow-400">Score 300-600</strong>
+                    <div class="text-gray-400 mt-1">
+                      → Verificação Adicional
+                    </div>
+                  </div>
+                  <div class="bg-blue-950 p-3 rounded border border-blue-700">
+                    <strong class="text-blue-400">Outros Casos</strong>
+                    <div class="text-gray-400 mt-1">→ Aprovação Auto</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 class="text-indigo-300 font-bold mb-4">Implementação</h4>
+              <pre
+                class="text-xs bg-gray-950 p-4 rounded border border-indigo-700/50"
+              ><code class="text-indigo-300">def risk_router(state: CreditState) -> str:
+    score = state["score"]
+    amount = state["amount"]
+    customer_type = state["customer_type"]
+    
+    # Lógica complexa de roteamento
+    if customer_type == "vip" and score > 800:
+        return "fast_track_approval"
+    elif amount > 100000 or score < 300:
+        return "manual_review"
+    elif 300 <= score <= 600:
+        return "additional_verification"
+    else:
+        return "auto_approval"
+
+# Registrar roteamento no grafo
+workflow.add_conditional_edges(
+    "scoring_node",
+    risk_router,
+    {
+        "fast_track_approval": "vip_approval_node",
+        "manual_review": "human_review_node",
+        "additional_verification": "verification_node", 
+        "auto_approval": "final_approval_node"
+    }
+)</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subgraphs & Composition -->
+        <div
+          class="bg-purple-900/10 border border-purple-500/30 rounded-2xl p-8 mb-8"
+        >
+          <h3
+            class="text-2xl font-bold text-purple-400 mb-6 flex items-center gap-3"
+          >
+            <i class="fas fa-sitemap"></i>Subgrafos & Composição Modular
+          </h3>
+          <p class="text-gray-300 mb-6">
+            <strong>Grafos compostos</strong> permitem reutilização e manutenção
+            independente. Times diferentes podem desenvolver subgrafos
+            especializados.
+          </p>
+
+          <div class="grid md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-gray-900 p-4 rounded-xl text-center">
+              <i class="fas fa-file-alt text-blue-400 text-2xl mb-3"></i>
+              <h4 class="text-blue-400 font-bold mb-2">Document Subgraph</h4>
+              <p class="text-xs text-gray-400">OCR + Validação + Anti-Fraude</p>
+            </div>
+            <div class="bg-gray-900 p-4 rounded-xl text-center">
+              <i class="fas fa-calculator text-green-400 text-2xl mb-3"></i>
+              <h4 class="text-green-400 font-bold mb-2">Scoring Subgraph</h4>
+              <p class="text-xs text-gray-400">ML Models + Bureau APIs</p>
+            </div>
+            <div class="bg-gray-900 p-4 rounded-xl text-center">
+              <i class="fas fa-gavel text-orange-400 text-2xl mb-3"></i>
+              <h4 class="text-orange-400 font-bold mb-2">
+                Compliance Subgraph
+              </h4>
+              <p class="text-xs text-gray-400">LGPD + KYC + AML</p>
+            </div>
+          </div>
+
+          <pre
+            class="text-xs bg-gray-950 p-4 rounded border border-purple-700/50"
+          ><code class="text-purple-300"># Criar subgrafo especializado
+def create_document_verification_subgraph():
+    subgraph = StateGraph(DocumentState)
+    subgraph.add_node("ocr", ocr_node)
+    subgraph.add_node("validate", validation_node)
+    subgraph.add_node("fraud_check", fraud_detection_node)
+    subgraph.add_edge("ocr", "validate")
+    subgraph.add_edge("validate", "fraud_check")
+    return subgraph.compile()
+
+# Incorporar no grafo principal
+def create_main_credit_graph():
+    main_graph = StateGraph(CreditState)
+    main_graph.add_node("intake", intake_node)
+    
+    # Subgrafo como nó especializado
+    doc_subgraph = create_document_verification_subgraph()
+    main_graph.add_node("document_processing", doc_subgraph)
+    
+    main_graph.add_edge("intake", "document_processing")
+    return main_graph.compile()</code></pre>
+        </div>
+
+        <!-- Tool Integration -->
+        <div
+          class="bg-green-900/10 border border-green-500/30 rounded-2xl p-8 mb-8"
+        >
+          <h3
+            class="text-2xl font-bold text-green-400 mb-6 flex items-center gap-3"
+          >
+            <i class="fas fa-tools"></i>Tool Calling & Function Integration
+          </h3>
+          <p class="text-gray-300 mb-6">
+            Integração nativa com
+            <strong>ferramentas externas dinâmicas</strong>. Nós podem escolher
+            automaticamente qual API chamar baseado no contexto.
+          </p>
+
+          <div class="grid lg:grid-cols-2 gap-6">
+            <div>
+              <h4 class="text-green-300 font-bold mb-3">
+                Ferramentas Disponíveis
+              </h4>
+              <div class="space-y-2 text-sm">
+                <div class="bg-gray-900 p-3 rounded flex items-center gap-3">
+                  <i class="fas fa-search text-blue-400"></i>
+                  <div>
+                    <strong class="text-blue-400">consult_spc</strong>
+                    <div class="text-gray-400 text-xs">
+                      Consultar SPC/Serasa por CPF
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-gray-900 p-3 rounded flex items-center gap-3">
+                  <i class="fas fa-money-check text-green-400"></i>
+                  <div>
+                    <strong class="text-green-400">validate_income</strong>
+                    <div class="text-gray-400 text-xs">
+                      Validar renda via Receita Federal
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-gray-900 p-3 rounded flex items-center gap-3">
+                  <i class="fas fa-university text-purple-400"></i>
+                  <div>
+                    <strong class="text-purple-400">check_bacen</strong>
+                    <div class="text-gray-400 text-xs">
+                      Consultar restrições BACEN
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 class="text-green-300 font-bold mb-3">
+                Nó com Tool Selection
+              </h4>
+              <pre
+                class="text-xs bg-gray-950 p-4 rounded border border-green-700/50"
+              ><code class="text-green-300">from langgraph.prebuilt import ToolNode
+
+def create_banking_tools():
+    return [
+        {
+            "name": "consult_spc",
+            "description": "Consultar SPC/Serasa",
+            "function": lambda cpf: spc_api.get_score(cpf)
+        },
+        {
+            "name": "validate_income",
+            "description": "Validar renda via RF", 
+            "function": lambda cpf, income: rf_api.validate(cpf, income)
+        },
+        {
+            "name": "check_bacen",
+            "description": "Consultar restrições BACEN",
+            "function": lambda cpf: bacen_api.get_restrictions(cpf)
+        }
+    ]
+
+# Nó que seleciona ferramentas dinamicamente
+tool_node = ToolNode(create_banking_tools())
+workflow.add_node("external_apis", tool_node)
+
+# LLM decide quais tools usar baseado no estado
+def tool_selection_node(state):
+    prompt = f"""Baseado nos dados do cliente {state['customer_id']},
+    determine quais consultas externas são necessárias:
+    - Dados disponíveis: {state.keys()}
+    - Valor solicitado: {state.get('amount', 'N/A')}
+    """
+    
+    # LLM escolhe tools e parâmetros
+    tool_calls = llm_with_tools.invoke(prompt)
+    return {"tool_calls": tool_calls}</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Streaming & Multi-agent -->
+        <div class="grid md:grid-cols-2 gap-8">
+          <!-- Streaming -->
+          <div class="bg-cyan-900/10 border border-cyan-500/30 rounded-2xl p-6">
+            <h3
+              class="text-xl font-bold text-cyan-400 mb-4 flex items-center gap-2"
+            >
+              <i class="fas fa-stream"></i>Real-time Streaming
+            </h3>
+            <p class="text-gray-300 text-sm mb-4">
+              Updates em <strong>tempo real</strong> para dashboards e mobile
+              apps. Cliente vê progresso da análise de crédito.
+            </p>
+            <pre
+              class="text-xs bg-gray-950 p-4 rounded border border-cyan-700/50"
+            ><code class="text-cyan-300">async def stream_credit_analysis():
+    config = {"configurable": {"thread_id": "stream_123"}}
+    
+    async for chunk in app.astream(
+        {"customer_id": "12345"}, 
+        config=config,
+        stream_mode="values"  # ou "updates"
+    ):
+        # WebSocket para frontend
+        await websocket.send(json.dumps({
+            "step": chunk.get("current_step"),
+            "progress": chunk.get("progress", 0),
+            "data": mask_pii(chunk)
+        }))</code></pre>
+          </div>
+
+          <!-- Multi-agent -->
+          <div
+            class="bg-orange-900/10 border border-orange-500/30 rounded-2xl p-6"
+          >
+            <h3
+              class="text-xl font-bold text-orange-400 mb-4 flex items-center gap-2"
+            >
+              <i class="fas fa-users"></i>Multi-agent Orchestração
+            </h3>
+            <p class="text-gray-300 text-sm mb-4">
+              <strong>Múltiplos agentes especializados</strong> trabalhando em
+              paralelo. Cada um com expertise específica.
+            </p>
+            <pre
+              class="text-xs bg-gray-950 p-4 rounded border border-orange-700/50"
+            ><code class="text-orange-300">class CreditAgentOrchestrator:
+    def __init__(self):
+        self.scoring_agent = ScoringAgent()
+        self.fraud_agent = FraudAgent()
+        self.compliance_agent = ComplianceAgent()
+        
+    async def orchestrate(self, state):
+        # Execução paralela
+        results = await asyncio.gather(
+            self.scoring_agent.invoke(state),
+            self.fraud_agent.invoke(state),
+            self.compliance_agent.invoke(state)
+        )
+        
+        # Consolidação inteligente
+        return self.consolidate_decisions(results)</code></pre>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="template-performance">
+      <div class="p-8 md:p-12 max-w-6xl mx-auto fade-in">
+        <span
+          class="text-purple-500 text-xs font-bold uppercase tracking-widest"
+          >Performance & Scale</span
+        >
+        <h2 class="text-4xl font-bold text-white mt-2 mb-6">
+          Otimização para Alta Performance
+        </h2>
+        <p class="text-gray-400 leading-relaxed mb-8">
+          Em bancos que processam
+          <strong>milhões de transações por dia</strong>, performance não é
+          luxo. Cada milissegundo importa quando você está competindo com
+          fintechs e as expectativas são de
+          <strong>resposta instantânea</strong>.
+        </p>
+
+        <!-- Métricas de Performance -->
+        <div
+          class="bg-gradient-to-r from-purple-900/20 to-purple-800/10 border border-purple-500/30 rounded-2xl p-8 mb-8"
+        >
+          <h3
+            class="text-2xl font-bold text-purple-400 mb-6 flex items-center gap-3"
+          >
+            <i class="fas fa-tachometer-alt"></i>Benchmarks de Sistemas
+            Bancários
+          </h3>
+          <div class="grid lg:grid-cols-4 gap-6">
+            <div class="text-center">
+              <div class="text-3xl font-bold text-green-400 mb-2">< 100ms</div>
+              <div class="text-sm text-gray-400">Aprovação de Crédito</div>
+              <div class="text-xs text-gray-500 mt-1">
+                P95 latência end-to-end
+              </div>
+            </div>
+            <div class="text-center">
+              <div class="text-3xl font-bold text-blue-400 mb-2">50K+</div>
+              <div class="text-sm text-gray-400">Threads Concorrentes</div>
+              <div class="text-xs text-gray-500 mt-1">Pico de Black Friday</div>
+            </div>
+            <div class="text-center">
+              <div class="text-3xl font-bold text-orange-400 mb-2">99.99%</div>
+              <div class="text-sm text-gray-400">Uptime Anual</div>
+              <div class="text-xs text-gray-500 mt-1">SLA contratual</div>
+            </div>
+            <div class="text-center">
+              <div class="text-3xl font-bold text-red-400 mb-2">< 30s</div>
+              <div class="text-sm text-gray-400">Recovery Time</div>
+              <div class="text-xs text-gray-500 mt-1">Após falha de nó</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Otimizações Específicas -->
+        <div class="grid md:grid-cols-2 gap-8 mb-8">
+          <!-- Otimização de Estado -->
+          <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6">
+            <h3
+              class="text-xl font-bold text-white mb-4 flex items-center gap-2"
+            >
+              <i class="fas fa-memory text-green-500"></i>Otimização de Estado
+            </h3>
+            <p class="text-gray-400 text-sm mb-4">
+              Estados grandes (> 10MB) matam performance. Implementar
+              <strong>lazy loading</strong> e
+              <strong>state sharding</strong> para manter apenas dados críticos
+              em memória.
+            </p>
+            <pre
+              class="text-xs bg-gray-950 p-4 rounded border border-gray-700"
+            ><code class="text-green-300">class OptimizedCreditState(TypedDict):
+    # Core data - sempre em memória
+    customer_id: str
+    score: int
+    status: str
+    
+    # Large data - lazy loaded
+    documents: Annotated[dict, lazy_load_field]
+    external_data: Annotated[dict, lazy_load_field]
+    
+@lazy_load_field
+def load_documents(state_id: str) -> dict:
+    # Carregar apenas quando acessado
+    return document_store.get(state_id)
+
+class LazyStateLoader:
+    def __init__(self, hot_cache: Redis, cold_store: PostgreSQL):
+        self.hot = hot_cache
+        self.cold = cold_store
+        
+    def get_state(self, thread_id: str) -> OptimizedCreditState:
+        # Tentar hot cache primeiro
+        core_state = self.hot.hgetall(f"state:{thread_id}")
+        
+        if not core_state:
+            # Fallback para cold storage
+            core_state = self.cold.get_core_state(thread_id)
+            
+        return OptimizedCreditState(**core_state)</code></pre>
+          </div>
+
+          <!-- Pool de Conexões -->
+          <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6">
+            <h3
+              class="text-xl font-bold text-white mb-4 flex items-center gap-2"
+            >
+              <i class="fas fa-network-wired text-blue-500"></i>Pool de Conexões
+              Inteligente
+            </h3>
+            <p class="text-gray-400 text-sm mb-4">
+              Conexões com APIs externas (SPC, BACEN) devem ser
+              <strong>reutilizadas</strong> e <strong>balanceadas</strong>.
+              Implementar circuit breaker por endpoint.
+            </p>
+            <pre
+              class="text-xs bg-gray-950 p-4 rounded border border-gray-700"
+            ><code class="text-blue-300">from aiohttp import ClientSession
+from asyncio import Semaphore
+
+class IntelligentConnectionPool:
+    def __init__(self):
+        self.pools = {
+            'spc': self._create_pool('https://api.spc.gov.br', 50),
+            'serasa': self._create_pool('https://api.serasa.com', 30),
+            'bacen': self._create_pool('https://api.bcb.gov.br', 20)
+        }
+        
+    def _create_pool(self, base_url: str, max_conn: int):
+        return {
+            'session': ClientSession(
+                base_url=base_url,
+                connector=aiohttp.TCPConnector(
+                    limit=max_conn,
+                    limit_per_host=max_conn,
+                    keepalive_timeout=30
+                )
+            ),
+            'semaphore': Semaphore(max_conn),
+            'circuit': CircuitBreaker(failure_threshold=5)
+        }
+        
+    async def call_api(self, service: str, endpoint: str, data: dict):
+        pool = self.pools[service]
+        
+        async with pool['semaphore']:  # Rate limiting
+            try:
+                return await pool['circuit'].call(
+                    self._make_request, pool['session'], endpoint, data
+                )
+            except CircuitBreakerOpenException:
+                # Usar cache ou fallback
+                return await self._get_cached_response(service, data)
+                
+# Uso em nós do grafo
+async def scoring_node(state: CreditState):
+    pool = get_connection_pool()
+    
+    # Parallelizar chamadas externas
+    spc_task = pool.call_api('spc', '/score', {'cpf': state.cpf})
+    serasa_task = pool.call_api('serasa', '/rating', {'cpf': state.cpf})
+    
+    spc_data, serasa_data = await asyncio.gather(
+        spc_task, serasa_task, return_exceptions=True
+    )
+    
+    return {'external_scores': {'spc': spc_data, 'serasa': serasa_data}}</code></pre>
+          </div>
+        </div>
+
+        <!-- Paralelização e Cache -->
+        <div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-8">
+          <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <i class="fas fa-bolt text-yellow-500"></i>Estratégias de Cache
+            Multinível
+          </h3>
+          <div class="grid lg:grid-cols-3 gap-6">
+            <div class="bg-gray-900 p-6 rounded-xl">
+              <h4 class="text-yellow-400 font-bold mb-3">L1: Memory Cache</h4>
+              <p class="text-sm text-gray-400 mb-3">
+                Dados frequentes (políticas de risco, tabelas de score)
+              </p>
+              <div class="text-xs text-gray-500">
+                • TTL: 5 minutos<br />
+                • Tamanho: 100MB por pod<br />
+                • Hit rate: > 95%
+              </div>
+            </div>
+            <div class="bg-gray-900 p-6 rounded-xl">
+              <h4 class="text-yellow-400 font-bold mb-3">L2: Redis Cluster</h4>
+              <p class="text-sm text-gray-400 mb-3">
+                Estados ativos, resultados de APIs externas
+              </p>
+              <div class="text-xs text-gray-500">
+                • TTL: 1 hora<br />
+                • Latência: < 5ms<br />
+                • Replicação: 2x
+              </div>
+            </div>
+            <div class="bg-gray-900 p-6 rounded-xl">
+              <h4 class="text-yellow-400 font-bold mb-3">L3: CDN Edge</h4>
+              <p class="text-sm text-gray-400 mb-3">
+                Dados estáticos (documentos, configurações)
+              </p>
+              <div class="text-xs text-gray-500">
+                • TTL: 24 horas<br />
+                • Global distribution<br />
+                • 99.9% availability
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="template-testing">
+      <div class="p-8 md:p-12 max-w-6xl mx-auto fade-in">
+        <span class="text-cyan-500 text-xs font-bold uppercase tracking-widest"
+          >Testing & QA</span
+        >
+        <h2 class="text-4xl font-bold text-white mt-2 mb-6">
+          Testes Avançados para Sistemas Críticos
+        </h2>
+        <p class="text-gray-400 leading-relaxed mb-8">
+          Sistemas bancários <strong>não podem falhar</strong>. Implementamos
+          testes que vão além de unit tests:
+          <strong
+            >chaos engineering, property-based testing, e simulação de
+            comportamento real</strong
+          >.
+        </p>
+
+        <!-- Pirâmide de Testes -->
+        <div
+          class="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-2xl p-8 mb-8"
+        >
+          <h3
+            class="text-2xl font-bold text-cyan-400 mb-6 flex items-center gap-3"
+          >
+            <i class="fas fa-layer-group"></i>Pirâmide de Testes para LangGraph
+          </h3>
+          <div class="grid md:grid-cols-4 gap-6 items-end">
+            <div class="text-center">
+              <div
+                class="bg-green-600 h-32 rounded-t-lg flex items-end justify-center p-4"
+              >
+                <div>
+                  <div class="text-2xl font-bold text-white">70%</div>
+                  <div class="text-xs text-green-200">Unit Tests</div>
+                </div>
+              </div>
+              <div class="bg-gray-900 p-3 rounded-b-lg">
+                <p class="text-xs text-gray-400">
+                  Testes de nós individuais, redutores, condições de arestas
+                </p>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <div
+                class="bg-blue-600 h-24 rounded-t-lg flex items-end justify-center p-4 mt-8"
+              >
+                <div>
+                  <div class="text-xl font-bold text-white">20%</div>
+                  <div class="text-xs text-blue-200">Integration Tests</div>
+                </div>
+              </div>
+              <div class="bg-gray-900 p-3 rounded-b-lg">
+                <p class="text-xs text-gray-400">
+                  Fluxos completos, APIs externas mockadas
+                </p>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <div
+                class="bg-purple-600 h-16 rounded-t-lg flex items-end justify-center p-4 mt-16"
+              >
+                <div>
+                  <div class="text-lg font-bold text-white">8%</div>
+                  <div class="text-xs text-purple-200">E2E Tests</div>
+                </div>
+              </div>
+              <div class="bg-gray-900 p-3 rounded-b-lg">
+                <p class="text-xs text-gray-400">
+                  Jornadas completas, environment de staging
+                </p>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <div
+                class="bg-red-600 h-12 rounded-t-lg flex items-end justify-center p-4 mt-20"
+              >
+                <div>
+                  <div class="text-sm font-bold text-white">2%</div>
+                  <div class="text-xs text-red-200">Chaos Tests</div>
+                </div>
+              </div>
+              <div class="bg-gray-900 p-3 rounded-b-lg">
+                <p class="text-xs text-gray-400">
+                  Testes de resiliência, falhas simuladas
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tipos de Teste Específicos -->
+        <div class="space-y-8">
+          <!-- Property-Based Testing -->
+          <div class="bg-gray-900 border border-gray-700 rounded-2xl p-8">
+            <h3
+              class="text-xl font-bold text-cyan-400 mb-4 flex items-center gap-2"
+            >
+              <i class="fas fa-random"></i>Property-Based Testing com Hypothesis
+            </h3>
+            <p class="text-gray-300 mb-6">
+              Gerar milhares de cenários automaticamente para encontrar edge
+              cases que desenvolvedores nunca pensariam.
+            </p>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <h4 class="text-cyan-300 font-bold mb-3">
+                  Propriedades Invariantes
+                </h4>
+                <ul class="text-sm text-gray-400 space-y-2">
+                  <li>• Score sempre entre 0-1000</li>
+                  <li>• Thread ID nunca duplicado</li>
+                  <li>• Estados só podem avançar</li>
+                  <li>• Auditoria sempre registrada</li>
+                  <li>• Dados PII sempre mascarados em logs</li>
+                </ul>
+              </div>
+              <div>
+                <pre
+                  class="text-xs bg-gray-950 p-4 rounded border border-cyan-700/50"
+                ><code class="text-cyan-300">from hypothesis import given, strategies as st
+from hypothesis.stateful import RuleBasedStateMachine
+
+class CreditGraphStateMachine(RuleBasedStateMachine):
+    def __init__(self):
+        super().__init__()
+        self.graph = create_credit_graph()
+        self.active_threads = set()
+        
+    @rule(customer_data=st.fixed_dictionaries({
+        'cpf': st.text(min_size=11, max_size=11, alphabet='0123456789'),
+        'income': st.floats(min_value=0, max_value=1000000),
+        'age': st.integers(min_value=18, max_value=100)
+    }))
+    def start_credit_process(self, customer_data):
+        thread_id = f"thread_{len(self.active_threads)}"
+        config = {"configurable": {"thread_id": thread_id}}
+        
+        result = self.graph.invoke(customer_data, config)
+        
+        # Invariantes que SEMPRE devem ser verdadeiras
+        assert 'decision' in result
+        assert result['decision'] in ['approved', 'denied', 'manual_review']
+        assert 0 <= result.get('final_score', 0) <= 1000
+        
+        # Se aprovado, deve ter valor
+        if result['decision'] == 'approved':
+            assert 'approved_amount' in result
+            assert result['approved_amount'] > 0
+            
+        self.active_threads.add(thread_id)
+        
+    @rule()
+    def check_audit_integrity(self):
+        # Todo thread deve ter eventos de auditoria
+        for thread_id in self.active_threads:
+            audit_events = audit_store.get_events(thread_id)
+            assert len(audit_events) > 0
+            assert audit_events[0]['event_type'] == 'process_started'
+            
+# Executar milhares de cenários
+if __name__ == "__main__":
+    # Hypothesis irá gerar casos automaticamente
+    test_machine = CreditGraphStateMachine()
+    test_machine.run_state_machine_as_test()</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chaos Engineering -->
+          <div class="bg-red-900/10 border border-red-500/30 rounded-2xl p-8">
+            <h3
+              class="text-xl font-bold text-red-400 mb-4 flex items-center gap-2"
+            >
+              <i class="fas fa-bolt"></i>Chaos Engineering com LitmusChaos
+            </h3>
+            <p class="text-gray-300 mb-6">
+              Simular falhas em produção para garantir que o sistema se recupera
+              graciosamente.
+            </p>
+            <div class="grid lg:grid-cols-3 gap-6">
+              <div class="bg-gray-900 p-6 rounded-xl">
+                <h4 class="text-red-300 font-bold mb-3">🔥 Falhas de Rede</h4>
+                <div class="text-sm text-gray-400 space-y-2">
+                  <div>• Latência +500ms no SPC</div>
+                  <div>• Timeout no Serasa</div>
+                  <div>• Packet loss 15%</div>
+                  <div>• DNS resolution failures</div>
+                </div>
+              </div>
+              <div class="bg-gray-900 p-6 rounded-xl">
+                <h4 class="text-red-300 font-bold mb-3">
+                  💾 Falhas de Storage
+                </h4>
+                <div class="text-sm text-gray-400 space-y-2">
+                  <div>• PostgreSQL read-only</div>
+                  <div>• Redis eviction policy</div>
+                  <div>• Disk full (95%)</div>
+                  <div>• Backup corruption</div>
+                </div>
+              </div>
+              <div class="bg-gray-900 p-6 rounded-xl">
+                <h4 class="text-red-300 font-bold mb-3">
+                  ⚡ Falhas de Compute
+                </h4>
+                <div class="text-sm text-gray-400 space-y-2">
+                  <div>• Pod restart aleatório</div>
+                  <div>• Memory pressure</div>
+                  <div>• CPU throttling</div>
+                  <div>• Container OOMKill</div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="mt-6 bg-gray-950 border border-red-700/50 rounded-lg p-4"
+            >
+              <pre
+                class="text-xs"
+              ><code class="text-red-300"># chaos-experiment.yaml
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: langgraph-credit-chaos
+spec:
+  appinfo:
+    appns: banking
+    applabel: "app=langgraph-credit"
+  chaosServiceAccount: litmus
+  experiments:
+  - name: pod-network-latency
+    spec:
+      components:
+        env:
+        - name: NETWORK_LATENCY
+          value: '2000'  # 2s latency
+        - name: DURATION
+          value: '300'   # 5 minutos
+  - name: pod-memory-hog
+    spec:
+      components:
+        env:
+        - name: MEMORY_CONSUMPTION
+          value: '90'    # 90% memoria
+        - name: DURATION
+          value: '180'</code></pre>
+            </div>
+          </div>
+
+          <!-- Contract Testing -->
+          <div
+            class="bg-purple-900/10 border border-purple-500/30 rounded-2xl p-8"
+          >
+            <h3
+              class="text-xl font-bold text-purple-400 mb-4 flex items-center gap-2"
+            >
+              <i class="fas fa-handshake"></i>Contract Testing com Pact
+            </h3>
+            <p class="text-gray-300 mb-6">
+              Garantir que mudanças em APIs externas não quebrem o grafo.
+              Contratos versionados e validação automática.
+            </p>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <h4 class="text-purple-300 font-bold mb-3">
+                  Consumer Contract (LangGraph)
+                </h4>
+                <pre
+                  class="text-xs bg-gray-950 p-4 rounded border border-purple-700/50"
+                ><code class="text-purple-300">from pact import Consumer, Provider
+
+pact = Consumer('langgraph-credit').has_pact_with(
+    Provider('spc-api'), 
+    host_name='localhost', 
+    port=1234
+)
+
+def test_spc_score_api():
+    # Definir expectativas do contrato
+    pact.given('valid CPF exists').upon_receiving(
+        'a score request'
+    ).with_request(
+        method='POST',
+        path='/v2/score',
+        headers={'Content-Type': 'application/json'},
+        body={'cpf': '12345678901', 'product': 'credit'}
+    ).will_respond_with(200, body={
+        'score': 750,
+        'risk_level': 'medium',
+        'timestamp': '2026-01-28T10:30:00Z',
+        'version': '2.1'
+    })
+    
+    # Executar teste real
+    with pact:
+        spc_client = SPCClient('http://localhost:1234')
+        response = spc_client.get_score('12345678901')
+        
+        assert response['score'] == 750
+        assert 'risk_level' in response</code></pre>
+              </div>
+              <div>
+                <h4 class="text-purple-300 font-bold mb-3">
+                  Provider Contract (SPC API)
+                </h4>
+                <pre
+                  class="text-xs bg-gray-950 p-4 rounded border border-purple-700/50"
+                ><code class="text-purple-300"># No provider (SPC), validar contra contratos
+from pact import Verifier
+
+def test_provider_honors_contracts():
+    verifier = Verifier(
+        provider='spc-api',
+        provider_base_url='https://api.spc.gov.br'
+    )
+    
+    # Validar todos os contratos de consumers
+    verifier.verify_pacts(
+        './pacts/langgraph_credit-spc_api.json',
+        provider_states_setup_url='http://localhost:5000/setup'
+    )
+    
+# Pipeline CI/CD
+# 1. LangGraph gera contratos
+# 2. SPC valida contratos
+# 3. Breaking changes = build fail
+# 4. Backward compatibility = auto merge</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="template-deployment">
+      <div class="p-8 md:p-12 max-w-6xl mx-auto fade-in">
+        <span
+          class="text-yellow-500 text-xs font-bold uppercase tracking-widest"
+          >Deploy Production</span
+        >
+        <h2 class="text-4xl font-bold text-white mt-2 mb-6">
+          Deploy Production-Grade
+        </h2>
+        <p class="text-gray-400 leading-relaxed mb-8">
+          Deploy de sistemas bancários exige
+          <strong
+            >zero downtime, rollback instantâneo, e compliance total</strong
+          >. Implementação com Kubernetes, GitOps, e observabilidade completa.
+        </p>
+
+        <!-- Arquitetura de Deploy -->
+        <div
+          class="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-2xl p-8 mb-8"
+        >
+          <h3
+            class="text-2xl font-bold text-yellow-400 mb-6 flex items-center gap-3"
+          >
+            <i class="fas fa-cloud"></i>Arquitetura Multi-Environment
+          </h3>
+          <div class="grid lg:grid-cols-4 gap-6">
+            <div class="bg-gray-900 p-6 rounded-xl border-l-4 border-green-500">
+              <h4 class="text-green-400 font-bold mb-3">Development</h4>
+              <div class="text-sm text-gray-400 space-y-2">
+                <div>• 1 pod por serviço</div>
+                <div>• SQLite local</div>
+                <div>• APIs mockadas</div>
+                <div>• Hot reload ativo</div>
+              </div>
+            </div>
+            <div class="bg-gray-900 p-6 rounded-xl border-l-4 border-blue-500">
+              <h4 class="text-blue-400 font-bold mb-3">Staging</h4>
+              <div class="text-sm text-gray-400 space-y-2">
+                <div>• 3 pods por serviço</div>
+                <div>• PostgreSQL cluster</div>
+                <div>• APIs de sandbox</div>
+                <div>• Dados anonimizados</div>
+              </div>
+            </div>
+            <div
+              class="bg-gray-900 p-6 rounded-xl border-l-4 border-yellow-500"
+            >
+              <h4 class="text-yellow-400 font-bold mb-3">Pre-Production</h4>
+              <div class="text-sm text-gray-400 space-y-2">
+                <div>• Espelho da produção</div>
+                <div>• APIs reais (read-only)</div>
+                <div>• Load testing</div>
+                <div>• Canary deploys</div>
+              </div>
+            </div>
+            <div class="bg-gray-900 p-6 rounded-xl border-l-4 border-red-500">
+              <h4 class="text-red-400 font-bold mb-3">Production</h4>
+              <div class="text-sm text-gray-400 space-y-2">
+                <div>• 20+ pods por serviço</div>
+                <div>• Multi-AZ deployment</div>
+                <div>• Blue/Green strategy</div>
+                <div>• 24/7 monitoring</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GitOps e CI/CD -->
+        <div class="grid md:grid-cols-2 gap-8 mb-8">
+          <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6">
+            <h3
+              class="text-xl font-bold text-white mb-4 flex items-center gap-2"
+            >
+              <i class="fas fa-code-branch text-orange-500"></i>GitOps com
+              ArgoCD
+            </h3>
+            <p class="text-gray-400 text-sm mb-4">
+              Toda mudança em produção passa por Git.
+              <strong>Auditoria completa</strong>, rollback automático, e
+              sincronização declarativa entre repositório e cluster.
+            </p>
+            <pre
+              class="text-xs bg-gray-950 p-4 rounded border border-gray-700"
+            ><code class="text-orange-300"># argocd-application.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: langgraph-credit-prod
+spec:
+  project: banking
+  source:
+    repoURL: https://github.com/bank/langgraph-credit
+    targetRevision: main
+    path: k8s/overlays/production
+  destination:
+    server: https://prod-k8s.bank.internal
+    namespace: langgraph-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+    - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  # Health checks customizados
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /spec/replicas  # Ignorar HPA scaling</code></pre>
+          </div>
+
+          <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6">
+            <h3
+              class="text-xl font-bold text-white mb-4 flex items-center gap-2"
+            >
+              <i class="fas fa-rocket text-blue-500"></i>Pipeline de Deploy
+            </h3>
+            <p class="text-gray-400 text-sm mb-4">
+              Pipeline multi-estágio com gates de qualidade, aprovações humanas
+              para produção, e rollback automático em caso de falha.
+            </p>
+            <div class="space-y-3">
+              <div
+                class="flex items-center gap-3 p-3 bg-green-950 border border-green-700 rounded-lg"
+              >
+                <div
+                  class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-xs font-bold"
+                >
+                  1
+                </div>
+                <span class="text-green-300 text-sm"
+                  ><strong>Build & Test:</strong> Unit + Integration + Security
+                  scan</span
+                >
+              </div>
+              <div
+                class="flex items-center gap-3 p-3 bg-blue-950 border border-blue-700 rounded-lg"
+              >
+                <div
+                  class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-xs font-bold"
+                >
+                  2
+                </div>
+                <span class="text-blue-300 text-sm"
+                  ><strong>Staging:</strong> E2E tests + Performance
+                  validation</span
+                >
+              </div>
+              <div
+                class="flex items-center gap-3 p-3 bg-yellow-950 border border-yellow-700 rounded-lg"
+              >
+                <div
+                  class="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-xs font-bold"
+                >
+                  3
+                </div>
+                <span class="text-yellow-300 text-sm"
+                  ><strong>Pre-prod:</strong> Canary 5% traffic + Chaos
+                  testing</span
+                >
+              </div>
+              <div
+                class="flex items-center gap-3 p-3 bg-red-950 border border-red-700 rounded-lg"
+              >
+                <div
+                  class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold"
+                >
+                  4
+                </div>
+                <span class="text-red-300 text-sm"
+                  ><strong>Production:</strong> Manual approval + Blue/Green
+                  deploy</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estratégias de Deploy -->
+        <div class="bg-gray-800/50 border border-gray-700 rounded-2xl p-8 mb-8">
+          <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <i class="fas fa-exchange-alt text-purple-500"></i>Estratégias de
+            Deploy Zero-Downtime
+          </h3>
+          <div class="grid lg:grid-cols-3 gap-6">
+            <div class="bg-gray-900 p-6 rounded-xl">
+              <h4
+                class="text-purple-400 font-bold mb-3 flex items-center gap-2"
+              >
+                <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                Blue/Green
+              </h4>
+              <p class="text-sm text-gray-400 mb-3">
+                Ambiente completo duplicado. Switch instantâneo de traffic.
+                Rollback imediato se necessário.
+              </p>
+              <div class="text-xs text-gray-500">
+                ✅ Zero downtime<br />
+                ✅ Rollback instant.<br />
+                ❌ 2x recursos<br />
+                ❌ Dados stateful
+              </div>
+            </div>
+
+            <div class="bg-gray-900 p-6 rounded-xl">
+              <h4
+                class="text-purple-400 font-bold mb-3 flex items-center gap-2"
+              >
+                <div class="w-2 h-3 bg-yellow-500"></div>
+                <div class="w-4 h-3 bg-yellow-600"></div>
+                <div class="w-6 h-3 bg-yellow-700"></div>
+                Canary
+              </h4>
+              <p class="text-sm text-gray-400 mb-3">
+                Deploy gradual: 5% → 25% → 50% → 100%. Monitoramento contínuo de
+                métricas.
+              </p>
+              <div class="text-xs text-gray-500">
+                ✅ Risco baixo<br />
+                ✅ Feedback rápido<br />
+                ❌ Deploy lento<br />
+                ❌ Complexidade
+              </div>
+            </div>
+
+            <div class="bg-gray-900 p-6 rounded-xl">
+              <h4
+                class="text-purple-400 font-bold mb-3 flex items-center gap-2"
+              >
+                <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
+                <div class="w-3 h-3 bg-orange-600 rounded-full"></div>
+                Rolling
+              </h4>
+              <p class="text-sm text-gray-400 mb-3">
+                Substituição pod por pod. Mínimo de recursos, máxima
+                estabilidade.
+              </p>
+              <div class="text-xs text-gray-500">
+                ✅ Eficiente recursos<br />
+                ✅ Simples config<br />
+                ❌ Deploy mais lento<br />
+                ❌ Rollback complexo
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Configuração Kubernetes -->
+        <div class="bg-gray-950 border border-gray-800 rounded-xl p-6">
+          <h4 class="text-white font-bold mb-4 flex items-center gap-2">
+            <i class="fas fa-cogs text-yellow-500"></i>Manifests Kubernetes
+            Production
+          </h4>
+          <pre
+            class="text-sm overflow-x-auto"
+          ><code class="text-gray-300"># deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langgraph-credit
+  namespace: banking-prod
+  labels:
+    app: langgraph-credit
+    version: "2.1.3"
+spec:
+  replicas: 20
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 5
+      maxUnavailable: 2
+  selector:
+    matchLabels:
+      app: langgraph-credit
+  template:
+    metadata:
+      labels:
+        app: langgraph-credit
+        version: "2.1.3"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+    spec:
+      serviceAccountName: langgraph-service-account
+      containers:
+      - name: langgraph-app
+        image: bank.registry.com/langgraph-credit:2.1.3
+        ports:
+        - containerPort: 8000
+          name: api
+        - containerPort: 8080
+          name: metrics
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: url
+        - name: REDIS_URL
+          valueFrom:
+            configMapKeyRef:
+              name: redis-config
+              key: url
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        # Security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL</code></pre>
+        </div>
+      </div>
+    </template>
+
+    <template id="template-lab">
+      <div class="p-8 md:p-12 max-w-6xl mx-auto fade-in h-full flex flex-col">
+        <div class="mb-8">
+          <h2 class="text-3xl font-bold text-white">Lab: O Motor de Decisão</h2>
+          <p class="text-gray-400">
+            Fluxo de Crédito Não-Linear com Intervenção por Risco.
+          </p>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8 flex-1">
+          <!-- Coluna 1: Visualizador -->
+          <div
+            class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-2xl p-6 relative flex flex-col items-center justify-center"
+          >
+            <!-- Nodes Layout -->
+            <div class="flex flex-col items-center gap-12 w-full relative">
+              <div
+                id="n-ingest"
+                class="node w-40 p-4 border-2 border-gray-700 bg-gray-800 rounded-xl text-center z-10"
+              >
+                <i class="fas fa-database text-gray-500 mb-2"></i>
+                <p class="text-xs font-bold">Ingestão de Dados</p>
+              </div>
+
+              <div
+                id="n-score"
+                class="node w-40 p-4 border-2 border-gray-700 bg-gray-800 rounded-xl text-center z-10"
+              >
+                <i class="fas fa-calculator text-gray-500 mb-2"></i>
+                <p class="text-xs font-bold">Motor de Scoring</p>
+                <span
+                  id="score-val"
+                  class="text-[10px] text-orange-400 font-mono hidden"
+                  >SCORE: --</span
+                >
+              </div>
+
+              <div class="flex gap-12">
+                <div
+                  id="n-hitl"
+                  class="node w-40 p-4 border-2 border-gray-700 bg-gray-800 rounded-xl text-center opacity-40 z-10"
+                >
+                  <i class="fas fa-user-shield text-gray-500 mb-2"></i>
+                  <p class="text-xs font-bold">Revisão Humana</p>
+                  <span
+                    class="bg-blue-600 text-[8px] px-2 rounded-full hidden"
+                    id="hitl-badge"
+                    >BREAKPOINT</span
+                  >
+                </div>
+                <div
+                  id="n-auto"
+                  class="node w-40 p-4 border-2 border-gray-700 bg-gray-800 rounded-xl text-center z-10"
+                >
+                  <i class="fas fa-robot text-gray-500 mb-2"></i>
+                  <p class="text-xs font-bold">Aprovação Auto</p>
+                </div>
+              </div>
+
+              <div
+                id="n-end"
+                class="node w-40 p-4 border-2 border-gray-700 bg-gray-800 rounded-xl text-center z-10"
+              >
+                <i class="fas fa-flag-checkered text-gray-500 mb-2"></i>
+                <p class="text-xs font-bold">Fim do Processo</p>
+              </div>
+
+              <!-- Lines (Static SVG Placeholder feel) -->
+              <div
+                class="absolute inset-0 flex items-center justify-center -z-0 opacity-20"
+              >
+                <div class="w-1 h-full bg-gray-700"></div>
+              </div>
+            </div>
+
+            <!-- Modal HITL -->
+            <div
+              id="hitl-modal"
+              class="modal-overlay fixed inset-0 z-50 flex items-center justify-center hidden p-4"
+            >
+              <div
+                class="bg-gray-900 border border-blue-500 p-8 rounded-2xl max-w-md w-full text-center shadow-[0_0_50px_rgba(59,130,246,0.2)]"
+              >
+                <i class="fas fa-hand-paper text-4xl text-blue-500 mb-4"></i>
+                <h3 class="text-xl font-bold text-white mb-2">
+                  Atenção Auditor
+                </h3>
+                <p class="text-sm text-gray-400 mb-6">
+                  Score calculado:
+                  <span id="modal-score" class="text-orange-500 font-bold"
+                    >--</span
+                  >. Risco considerado
+                  <span class="text-red-500 font-bold">MÉDIO/ALTO</span>. O
+                  fluxo exige sua validação para continuar.
+                </p>
+                <div class="flex gap-3 justify-center">
+                  <button
+                    onclick="handleHitl(true)"
+                    class="bg-green-600 hover:bg-green-500 px-6 py-2 rounded-lg text-sm font-bold"
+                  >
+                    APROVAR
+                  </button>
+                  <button
+                    onclick="handleHitl(false)"
+                    class="bg-red-600 hover:bg-red-500 px-6 py-2 rounded-lg text-sm font-bold"
+                  >
+                    REJEITAR
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Coluna 2: Estado e Controle -->
+          <div class="space-y-4">
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+              <h4 class="text-xs font-bold text-gray-500 uppercase mb-4">
+                Estado Atual do Grafo
+              </h4>
+              <div
+                class="bg-black/50 p-4 rounded font-mono text-[11px] text-orange-300 min-h-[120px]"
+                id="state-display"
+              >
+                { "status": "idle" }
+              </div>
+            </div>
+            <button
+              id="btn-run"
+              onclick="runSimulation()"
+              class="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-3"
+            >
+              <i class="fas fa-play"></i> INICIAR FLUXO
+            </button>
+            <button
+              onclick="resetLab()"
+              class="w-full text-gray-500 text-xs hover:text-white transition-colors"
+            >
+              Resetar Simulação
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <script>
+      let currentStep = 0;
+      let score = 0;
+
+      function showSection(sectionId) {
+        const area = document.getElementById("content-area");
+        const template = document.getElementById(`template-${sectionId}`);
+
+        // UI Updates
+        document
+          .querySelectorAll(".nav-link")
+          .forEach((btn) => btn.classList.remove("active"));
+        document.getElementById(`btn-${sectionId}`).classList.add("active");
+
+        area.innerHTML = "";
+        area.appendChild(template.content.cloneNode(true));
+
+        if (sectionId === "lab") {
+          currentStep = 0;
+          updateStateDisplay({ status: "idle" });
+        }
+      }
+
+      function updateStateDisplay(state) {
+        const display = document.getElementById("state-display");
+        if (display) display.innerText = JSON.stringify(state, null, 2);
+      }
+
+      function runSimulation() {
+        const btn = document.getElementById("btn-run");
+
+        if (currentStep === 0) {
+          // Step Ingest
+          currentStep = 1;
+          document.getElementById("n-ingest").classList.add("node-active");
+          updateStateDisplay({ status: "ingesting", customer: "Empresa XPTO" });
+          btn.innerHTML = '<i class="fas fa-forward"></i> Calcular Scoring';
+        } else if (currentStep === 1) {
+          // Step Score
+          currentStep = 2;
+          score = Math.floor(Math.random() * (900 - 300) + 300);
+          document.getElementById("n-score").classList.add("node-active");
+          document.getElementById("score-val").classList.remove("hidden");
+          document.getElementById("score-val").innerText = `SCORE: ${score}`;
+          updateStateDisplay({ status: "scoring_done", score: score });
+          btn.innerHTML = '<i class="fas fa-code-branch"></i> Decidir Caminho';
+        } else if (currentStep === 2) {
+          // Logic Path
+          if (score > 800) {
+            // Auto approve
+            document.getElementById("n-auto").classList.add("node-active");
+            finishLab(true);
+          } else {
+            // HITL
+            document.getElementById("n-hitl").classList.remove("opacity-40");
+            document.getElementById("n-hitl").classList.add("node-hitl");
+            document.getElementById("hitl-badge").classList.remove("hidden");
+            document.getElementById("modal-score").innerText = score;
+
+            setTimeout(() => {
+              document.getElementById("hitl-modal").classList.remove("hidden");
+            }, 500);
+          }
+        }
+      }
+
+      function handleHitl(approve) {
+        document.getElementById("hitl-modal").classList.add("hidden");
+        updateStateDisplay({
+          status: "human_decided",
+          approved: approve,
+          score: score,
+        });
+        finishLab(approve);
+      }
+
+      function finishLab(approved) {
+        document.getElementById("n-end").classList.add("node-active");
+        const btn = document.getElementById("btn-run");
+        btn.disabled = true;
+        btn.className =
+          "w-full bg-gray-800 text-gray-500 font-bold py-4 rounded-xl cursor-not-allowed";
+        btn.innerHTML = approved
+          ? '<i class="fas fa-check"></i> CRÉDITO APROVADO'
+          : '<i class="fas fa-times"></i> CRÉDITO NEGADO';
+      }
+
+      function resetLab() {
+        showSection("lab");
+      }
+
+      // Init
+      document.addEventListener("DOMContentLoaded", () => {
+        showSection("intro");
+      });
+    </script>
+  </body>
+</html>
