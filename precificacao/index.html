@@ -516,6 +516,195 @@
       color: var(--primary-l);
     }
 
+    /* ── Matrix sliders ── */
+    .matrix-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1rem;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 0.6rem;
+    }
+    .matrix-row:has(input:focus) { border-color: var(--primary); }
+    .matrix-info { flex: 1; min-width: 0; }
+    .matrix-title { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+    .matrix-desc  { font-size: 0.72rem; color: var(--dim); margin-top: 0.1rem; }
+    .matrix-controls { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
+    .matrix-controls input[type=range] {
+      width: 120px;
+      -webkit-appearance: none;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      outline: none;
+    }
+    .matrix-controls input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+    }
+    .matrix-val {
+      min-width: 1.8rem;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--primary-l);
+    }
+    .weight-tag {
+      font-size: 0.65rem;
+      font-weight: 700;
+      background: rgba(99,102,241,0.12);
+      color: var(--primary-l);
+      border: 1px solid rgba(99,102,241,0.25);
+      border-radius: 999px;
+      padding: 0.1rem 0.45rem;
+      white-space: nowrap;
+    }
+
+    /* ── Score display ── */
+    .score-display {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      background: var(--bg2);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      margin-top: 1.25rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .score-num {
+      font-size: 2.8rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    .score-max { font-size: 1.1rem; color: var(--dim); font-weight: 400; }
+    .score-bar-wrap {
+      flex: 1;
+      min-width: 180px;
+      height: 10px;
+      background: var(--bg3);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .score-bar { height: 100%; border-radius: 5px; transition: width .4s ease, background .4s ease; }
+    .verdict-box {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-align: center;
+      min-width: 140px;
+    }
+    .verdict-go     { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: var(--green-l); }
+    .verdict-piloto { background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.4); color: var(--amber-l); }
+    .verdict-nogo   { background: rgba(244,63,94,0.15);  border: 1px solid rgba(244,63,94,0.4);  color: var(--rose-l); }
+
+    /* ── Go/No-Go gates ── */
+    .gate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .gate-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      padding: 0.7rem 0.85rem;
+      border-radius: 8px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all .15s;
+      user-select: none;
+    }
+    .gate-item.checked { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.35); }
+    .gate-check {
+      width: 18px; height: 18px;
+      border-radius: 4px;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem;
+      margin-top: 0.1rem;
+      transition: all .15s;
+    }
+    .gate-item.checked .gate-check { background: var(--green); border-color: var(--green); color: white; }
+    .gate-text { font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+    .gate-title { font-weight: 600; color: var(--text); font-size: 0.8rem; }
+
+    /* ── ROI inputs ── */
+    .roi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+    .roi-field { display: flex; flex-direction: column; gap: 0.4rem; }
+    .roi-label { font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    .roi-label span { font-weight: 400; text-transform: none; color: var(--dim); font-size: .68rem; }
+    .roi-input-wrap { position: relative; }
+    .roi-prefix {
+      position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%);
+      font-size: 0.8rem; color: var(--dim); pointer-events: none;
+    }
+    .roi-input {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 0.6rem 0.85rem 0.6rem 2.5rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .roi-input:focus { border-color: var(--primary); }
+    .roi-input.no-prefix { padding-left: 0.85rem; }
+
+    /* ── ROI KPI cards ── */
+    .roi-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin: 1.25rem 0; }
+    .kpi-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .kpi-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); margin-bottom: 0.4rem; }
+    .kpi-val { font-size: 1.6rem; font-weight: 900; font-family: monospace; letter-spacing: -0.02em; line-height: 1; }
+
+    /* ── Ficha executiva ── */
+    .ficha-wrap {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-top: 0;
+    }
+    .ficha-row { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.85rem; }
+    .ficha-row:last-child { margin-bottom: 0; }
+    .ficha-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); }
+    .ficha-input {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.85rem;
+      padding: 0.45rem 0.75rem;
+      outline: none;
+      width: 100%;
+      transition: border-color .2s;
+    }
+    .ficha-input:focus { border-color: var(--primary); }
+    textarea.ficha-input { resize: vertical; min-height: 56px; }
+
+    @media (max-width: 640px) {
+      .gate-grid { grid-template-columns: 1fr; }
+      .roi-grid  { grid-template-columns: 1fr; }
+      .roi-kpis  { grid-template-columns: repeat(2, 1fr); }
+      .matrix-controls input[type=range] { width: 80px; }
+    }
+
     @media (max-width: 640px) {
       .cards-grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
       .cards-grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
@@ -572,8 +761,16 @@
       <div class="step-label">Entregáveis</div>
     </div>
     <div class="progress-step" data-step="5">
-      <div class="step-bubble">💰</div>
-      <div class="step-label">Resultado</div>
+      <div class="step-bubble">5</div>
+      <div class="step-label">Priorização</div>
+    </div>
+    <div class="progress-step" data-step="6">
+      <div class="step-bubble">6</div>
+      <div class="step-label">ROI</div>
+    </div>
+    <div class="progress-step" data-step="7">
+      <div class="step-bubble">★</div>
+      <div class="step-label">Relatório</div>
     </div>
   </div>
 </div>
@@ -1196,20 +1393,214 @@
 
     <div class="nav-bar">
       <button class="btn btn-ghost" onclick="prevStep()">← Voltar</button>
-      <button class="btn btn-success" onclick="calculate()">💰 Calcular Precificação</button>
+      <button class="btn btn-primary" onclick="calculate(); nextStep();">Próximo: Matriz de Priorização →</button>
     </div>
   </div>
 
-  <!-- ▸ STEP 5: Resultados -->
+  <!-- ▸ STEP 5: Matriz de Priorização -->
   <div class="step-panel" id="step-5">
+    <div class="step-title">Matriz de Priorização</div>
+    <div class="step-desc">Avalie a iniciativa pelos 5 critérios ponderados. Score máximo: 50 pontos.</div>
+
+    <div class="field-group">
+      <div class="field-label">Gates Go / No-Go <span class="info-tip">marque todos para avançar</span></div>
+      <div class="gate-grid" id="gateGrid">
+        <div class="gate-item" onclick="toggleGate(this)">
+          <div class="gate-check">✓</div>
+          <div><div class="gate-title">Problema de negócio claro</div><div class="gate-text">Existe um dono identificado e o problema está bem definido</div></div>
+        </div>
+        <div class="gate-item" onclick="toggleGate(this)">
+          <div class="gate-check">✓</div>
+          <div><div class="gate-title">KPI mensurável definido</div><div class="gate-text">Há uma métrica de sucesso antes e depois</div></div>
+        </div>
+        <div class="gate-item" onclick="toggleGate(this)">
+          <div class="gate-check">✓</div>
+          <div><div class="gate-title">Dados existem (ou plano concreto)</div><div class="gate-text">Os dados necessários existem ou há plano viável para estruturá-los</div></div>
+        </div>
+        <div class="gate-item" onclick="toggleGate(this)">
+          <div class="gate-check">✓</div>
+          <div><div class="gate-title">Sponsor com poder de decisão</div><div class="gate-text">Existe um sponsor comprometido, não apenas um "acompanhador"</div></div>
+        </div>
+      </div>
+      <div id="gateWarning" style="display:none" class="alert alert-amber" style="margin-top:.5rem">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-body"><div class="alert-title">Gates incompletos</div>Projetos sem todos os gates têm alta taxa de fracasso. Recomendamos resolver os pontos em vermelho antes de prosseguir.</div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Critérios de Pontuação</div>
+
+      <div class="matrix-row">
+        <div class="matrix-info">
+          <div class="matrix-title">💰 Impacto Financeiro <span class="weight-tag">peso ×3</span></div>
+          <div class="matrix-desc">1 = &lt;R$50k/ano · 3 = R$200–500k/ano · 5 = &gt;R$1M ou nova receita</div>
+        </div>
+        <div class="matrix-controls">
+          <input type="range" min="1" max="5" value="3" id="sc-impacto" oninput="recalcMatrix()">
+          <span class="matrix-val" id="v-impacto">3</span>
+        </div>
+      </div>
+
+      <div class="matrix-row">
+        <div class="matrix-info">
+          <div class="matrix-title">⚙️ Ganho Operacional <span class="weight-tag">peso ×2</span></div>
+          <div class="matrix-desc">1 = ganho marginal · 3 = redução de 30–50% do esforço · 5 = elimina gargalo</div>
+        </div>
+        <div class="matrix-controls">
+          <input type="range" min="1" max="5" value="3" id="sc-eficiencia" oninput="recalcMatrix()">
+          <span class="matrix-val" id="v-eficiencia">3</span>
+        </div>
+      </div>
+
+      <div class="matrix-row">
+        <div class="matrix-info">
+          <div class="matrix-title">🔧 Facilidade Técnica <span class="weight-tag">peso ×2</span></div>
+          <div class="matrix-desc">1 = exige P&amp;D / modelo customizado · 3 = integração média · 5 = SaaS / API pronta</div>
+        </div>
+        <div class="matrix-controls">
+          <input type="range" min="1" max="5" value="3" id="sc-viabilidad" oninput="recalcMatrix()">
+          <span class="matrix-val" id="v-viabilidad">3</span>
+        </div>
+      </div>
+
+      <div class="matrix-row">
+        <div class="matrix-info">
+          <div class="matrix-title">🗄️ Prontidão dos Dados <span class="weight-tag">peso ×2</span></div>
+          <div class="matrix-desc">1 = não existem · 3 = existem mas precisam de limpeza · 5 = limpos, rotulados e acessíveis</div>
+        </div>
+        <div class="matrix-controls">
+          <input type="range" min="1" max="5" value="3" id="sc-dados" oninput="recalcMatrix()">
+          <span class="matrix-val" id="v-dados">3</span>
+        </div>
+      </div>
+
+      <div class="matrix-row">
+        <div class="matrix-info">
+          <div class="matrix-title">🛡️ Risco (invertido) <span class="weight-tag">peso ×1</span></div>
+          <div class="matrix-desc">1 = risco regulatório / reputacional alto · 3 = controlável · 5 = risco baixo</div>
+        </div>
+        <div class="matrix-controls">
+          <input type="range" min="1" max="5" value="3" id="sc-risco" oninput="recalcMatrix()">
+          <span class="matrix-val" id="v-risco">3</span>
+        </div>
+      </div>
+
+      <div class="score-display" id="scoreDisplay">
+        <div>
+          <div style="font-size:.7rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.2rem">Score Total</div>
+          <span class="score-num" id="sc-total" style="color:var(--amber-l)">30</span>
+          <span class="score-max"> / 50</span>
+        </div>
+        <div class="score-bar-wrap">
+          <div class="score-bar" id="scoreBar" style="width:60%;background:var(--amber)"></div>
+        </div>
+        <div>
+          <div class="verdict-box verdict-piloto" id="sc-verdict">Piloto (30–60 dias)</div>
+          <div style="font-size:.7rem;color:var(--dim);margin-top:.4rem;max-width:200px;text-align:center" id="sc-desc">Rode uma PoC controlada com critério de saída antes de comprometer o portfólio.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn btn-ghost" onclick="prevStep()">← Voltar</button>
+      <button class="btn btn-primary" onclick="nextStep()">Próximo: ROI &amp; Payback →</button>
+    </div>
+  </div>
+
+  <!-- ▸ STEP 6: ROI & Payback -->
+  <div class="step-panel" id="step-6">
+    <div class="step-title">ROI &amp; Payback</div>
+    <div class="step-desc">Preencha os valores financeiros do projeto. O custo de implantação foi pré-preenchido com o mínimo estimado na precificação.</div>
+
+    <div class="field-group">
+      <div class="field-label">Dados Financeiros</div>
+      <div class="roi-grid">
+        <div class="roi-field">
+          <div class="roi-label">Benefício Anual Estimado <span>(horas economizadas × salário + SLA + receita)</span></div>
+          <div class="roi-input-wrap">
+            <span class="roi-prefix">R$</span>
+            <input class="roi-input" type="number" id="roi-b" value="0" min="0" step="1000" oninput="recalcROI()">
+          </div>
+        </div>
+        <div class="roi-field">
+          <div class="roi-label">Custo de Implantação <span>(pré-preenchido pela precificação)</span></div>
+          <div class="roi-input-wrap">
+            <span class="roi-prefix">R$</span>
+            <input class="roi-input" type="number" id="roi-c0" value="0" min="0" step="1000" oninput="recalcROI()">
+          </div>
+        </div>
+        <div class="roi-field">
+          <div class="roi-label">Custo Recorrente Anual <span>(APIs, infra, retraining, monitoramento)</span></div>
+          <div class="roi-input-wrap">
+            <span class="roi-prefix">R$</span>
+            <input class="roi-input" type="number" id="roi-cr" value="0" min="0" step="1000" oninput="recalcROI()">
+          </div>
+        </div>
+        <div class="roi-field">
+          <div class="roi-label">Horizonte de Análise <span>(anos recomendados: 3)</span></div>
+          <div class="roi-input-wrap">
+            <input class="roi-input no-prefix" type="number" id="roi-h" value="3" min="1" max="10" oninput="recalcROI()">
+          </div>
+        </div>
+      </div>
+
+      <div class="roi-kpis">
+        <div class="kpi-card">
+          <div class="kpi-label">ROI Ano 1</div>
+          <div class="kpi-val" id="kpi-roi1" style="color:var(--dim)">–</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">ROI Horizonte</div>
+          <div class="kpi-val" id="kpi-roih" style="color:var(--dim)">–</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Payback</div>
+          <div class="kpi-val" id="kpi-pay" style="color:var(--dim)">–</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Ganho Líquido</div>
+          <div class="kpi-val" id="kpi-net" style="color:var(--dim)">–</div>
+        </div>
+      </div>
+
+      <div class="res-card" style="margin-top:.5rem">
+        <div class="res-card-title">📈 Fluxo Acumulado</div>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="roiChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn btn-ghost" onclick="prevStep()">← Voltar</button>
+      <button class="btn btn-success" onclick="generateReport()">📊 Gerar Relatório Completo</button>
+    </div>
+  </div>
+
+  <!-- ▸ STEP 7: Relatório Completo -->
+  <div class="step-panel" id="step-7">
 
     <div class="print-bar">
       <button class="btn btn-ghost" style="font-size:.8rem" onclick="goToStep(1)">← Recalcular</button>
+      <button class="btn btn-ghost" style="font-size:.8rem" onclick="copiarFicha()">📋 Copiar Ficha</button>
       <button class="btn btn-ghost" style="font-size:.8rem" onclick="window.print()">🖨️ Imprimir</button>
     </div>
 
+    <!-- Ficha de identificação -->
+    <div class="res-card full" style="margin-bottom:1rem">
+      <div class="res-card-title">📝 Identificação da Iniciativa</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+        <div class="ficha-row"><div class="ficha-label">Nome do Projeto</div><input class="ficha-input" id="f-nome" placeholder="Ex: Assistente de Contratos com RAG"></div>
+        <div class="ficha-row"><div class="ficha-label">Sponsor (nome · cargo)</div><input class="ficha-input" id="f-sponsor" placeholder="Ex: João Silva · CTO"></div>
+        <div class="ficha-row" style="grid-column:1/-1"><div class="ficha-label">Problema de Negócio</div><textarea class="ficha-input" id="f-problema" placeholder="Descreva em uma frase o problema que a IA resolve"></textarea></div>
+        <div class="ficha-row"><div class="ficha-label">KPI de Sucesso</div><input class="ficha-input" id="f-kpi" placeholder="Ex: Reduzir tempo de análise em 40%"></div>
+        <div class="ficha-row"><div class="ficha-label">Data da Avaliação</div><input class="ficha-input" id="f-data" readonly></div>
+      </div>
+    </div>
+
     <div class="results-header">
-      <div class="results-badge">✅ Estimativa Gerada — Hcode PrecifAI</div>
+      <div class="results-badge">✅ Relatório Completo — Hcode PrecifAI</div>
       <div class="price-display">
         <span class="price-min" id="res-price-min">R$ –</span>
         <span class="price-sep">—</span>
@@ -1247,6 +1638,54 @@
       <div class="res-card full">
         <div class="res-card-title">🔢 Breakdown de Multiplicadores</div>
         <div id="res-multipliers"></div>
+      </div>
+
+      <!-- Matriz de Priorização -->
+      <div class="res-card full">
+        <div class="res-card-title">🎯 Matriz de Priorização — Score e Veredicto</div>
+        <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;margin-bottom:1rem">
+          <div style="text-align:center">
+            <div style="font-size:.7rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.2rem">Score</div>
+            <span style="font-size:2.5rem;font-weight:900;letter-spacing:-0.03em" id="res-score">–</span>
+            <span style="font-size:1rem;color:var(--dim)"> / 50</span>
+          </div>
+          <div style="flex:1;min-width:160px">
+            <div style="height:10px;background:var(--bg3);border-radius:5px;overflow:hidden;margin-bottom:.5rem">
+              <div id="res-score-bar" style="height:100%;border-radius:5px;transition:width .5s ease;background:var(--amber)"></div>
+            </div>
+            <div class="verdict-box" id="res-verdict" style="display:inline-block">–</div>
+          </div>
+          <div class="chart-wrap" style="height:200px;width:220px;flex-shrink:0">
+            <canvas id="matrixChart"></canvas>
+          </div>
+        </div>
+        <div id="res-matrix-breakdown"></div>
+      </div>
+
+      <!-- ROI & Payback -->
+      <div class="res-card full">
+        <div class="res-card-title">💵 ROI, Payback e Análise Financeira</div>
+        <div class="roi-kpis" style="margin:0 0 1rem">
+          <div class="kpi-card">
+            <div class="kpi-label">ROI Ano 1</div>
+            <div class="kpi-val" id="res-roi1">–</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">ROI <span id="res-horizon-label">3</span> Anos</div>
+            <div class="kpi-val" id="res-roih">–</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Payback</div>
+            <div class="kpi-val" id="res-pay">–</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Ganho Líquido</div>
+            <div class="kpi-val" id="res-net">–</div>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="roiChartFinal"></canvas>
+        </div>
       </div>
 
       <!-- Alerts -->
@@ -1538,7 +1977,324 @@ function calculate() {
 
   document.getElementById('res-alerts').innerHTML = alertsHtml;
 
-  goToStep(5);
+  // store pricing results for report
+  window._pricing = { minPrice, maxPrice, total, multValues,
+    phaseLabel: phaseLabels[state.projectPhase],
+    solutionLabel: solutionLabels[state.solutionType],
+    team, tl, alerts };
+}
+
+// ══════════════════════════════════════════════════
+//  MATRIX
+// ══════════════════════════════════════════════════
+const WEIGHTS = { impacto:3, eficiencia:2, viabilidad:2, dados:2, risco:1 };
+
+function recalcMatrix() {
+  let total = 0;
+  for (const [k, w] of Object.entries(WEIGHTS)) {
+    const el = document.getElementById('sc-' + k);
+    if (!el) return;
+    const v = Number(el.value);
+    document.getElementById('v-' + k).textContent = v;
+    total += v * w;
+  }
+  document.getElementById('sc-total').textContent = total;
+  const pct = ((total - 10) / 40) * 100;
+  const bar = document.getElementById('scoreBar');
+  bar.style.width = pct + '%';
+
+  const vEl = document.getElementById('sc-verdict');
+  const dEl = document.getElementById('sc-desc');
+  if (total >= 35) {
+    bar.style.background = 'var(--green)';
+    document.getElementById('sc-total').style.color = 'var(--green-l)';
+    vEl.className = 'verdict-box verdict-go';
+    vEl.textContent = '✅ Aprovar — portfólio ativo';
+    dEl.textContent = 'Defina sponsor, squad e prazo em até 15 dias. Submeta a ficha ao próximo comitê.';
+  } else if (total >= 25) {
+    bar.style.background = 'var(--amber)';
+    document.getElementById('sc-total').style.color = 'var(--amber-l)';
+    vEl.className = 'verdict-box verdict-piloto';
+    vEl.textContent = '🧪 Piloto (30–60 dias)';
+    dEl.textContent = 'Rode uma PoC controlada com critério de saída antes de comprometer o portfólio.';
+  } else {
+    bar.style.background = 'var(--rose)';
+    document.getElementById('sc-total').style.color = 'var(--rose-l)';
+    vEl.className = 'verdict-box verdict-nogo';
+    vEl.textContent = '❌ Reprovar — retorna ao backlog';
+    dEl.textContent = 'Investigue: falta sponsor? Dados? Problema claro? Retorne quando mudar.';
+  }
+}
+
+// ── Go/No-Go toggles ──
+function toggleGate(el) {
+  el.classList.toggle('checked');
+  const total = document.querySelectorAll('#gateGrid .gate-item').length;
+  const checked = document.querySelectorAll('#gateGrid .gate-item.checked').length;
+  document.getElementById('gateWarning').style.display = checked < total ? 'flex' : 'none';
+}
+
+// ══════════════════════════════════════════════════
+//  ROI
+// ══════════════════════════════════════════════════
+let roiChartStepInstance = null;
+
+function recalcROI() {
+  const B  = +document.getElementById('roi-b').value  || 0;
+  const C0 = +document.getElementById('roi-c0').value || 0;
+  const Cr = +document.getElementById('roi-cr').value || 0;
+  const H  = Math.max(1, +document.getElementById('roi-h').value || 3);
+
+  const custoAno1 = C0 + Cr;
+  const roi1 = custoAno1 > 0 ? ((B - custoAno1) / custoAno1) * 100 : 0;
+  const custoH = C0 + Cr * H;
+  const benefH = B * H;
+  const roiH = custoH > 0 ? ((benefH - custoH) / custoH) * 100 : 0;
+  const netMensal = (B - Cr) / 12;
+  const payback = netMensal > 0 ? C0 / netMensal : Infinity;
+  const ganho = benefH - custoH;
+
+  const fmtPct = v => isFinite(v) ? v.toFixed(0) + '%' : '—';
+  const fmtMes = v => isFinite(v) ? v.toFixed(1) + ' m' : '∞';
+  const fmtRS  = v => 'R$' + Math.round(v).toLocaleString('pt-BR');
+  const color  = (v, g, w) => v >= g ? 'var(--green-l)' : v >= w ? 'var(--amber-l)' : 'var(--rose-l)';
+
+  const set = (id, txt, col) => { const el=document.getElementById(id); if(el){el.textContent=txt;el.style.color=col;} };
+  set('kpi-roi1', fmtPct(roi1),   color(roi1, 50, 0));
+  set('kpi-roih', fmtPct(roiH),   color(roiH,100, 0));
+  set('kpi-pay',  fmtMes(payback), payback<=12?'var(--green-l)':payback<=18?'var(--amber-l)':'var(--rose-l)');
+  set('kpi-net',  fmtRS(ganho),    ganho>=0?'var(--green-l)':'var(--rose-l)');
+
+  // cumulative chart
+  const labels = Array.from({length:H+1},(_,i)=>'Ano '+i);
+  const costs  = Array.from({length:H+1},(_,i)=> i===0 ? C0 : C0 + Cr*i);
+  const bens   = Array.from({length:H+1},(_,i)=> B*i);
+
+  if (roiChartStepInstance) roiChartStepInstance.destroy();
+  const ctx2 = document.getElementById('roiChart')?.getContext('2d');
+  if (!ctx2) return;
+  roiChartStepInstance = new Chart(ctx2, {
+    data: {
+      labels,
+      datasets: [
+        { type:'bar',  label:'Custo Acumulado', data:costs, backgroundColor:'rgba(244,63,94,0.4)', borderColor:'rgba(244,63,94,.8)', borderWidth:1 },
+        { type:'line', label:'Benefício Acumulado', data:bens, borderColor:'rgba(16,185,129,.9)', backgroundColor:'rgba(16,185,129,.1)', borderWidth:2, fill:true, tension:.3, pointRadius:4 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ color:'#94a3b8', font:{size:11} } } },
+      scales:{
+        x:{ ticks:{color:'#64748b'}, grid:{color:'rgba(71,85,105,.3)'} },
+        y:{ ticks:{color:'#64748b', callback:v=>'R$'+v.toLocaleString('pt-BR')}, grid:{color:'rgba(71,85,105,.3)'} }
+      }
+    }
+  });
+
+  window._roi = { roi1, roiH, payback, ganho, B, C0, Cr, H };
+}
+
+// ══════════════════════════════════════════════════
+//  GENERATE FULL REPORT (Step 7)
+// ══════════════════════════════════════════════════
+let matrixChartInst = null, roiChartFinalInst = null;
+
+function generateReport() {
+  const p = window._pricing || {};
+  const r = window._roi || {};
+
+  // pricing section (already filled via calculate())
+  document.getElementById('res-price-min').textContent = p.minPrice ? 'R$ '+p.minPrice.toLocaleString('pt-BR') : '–';
+  document.getElementById('res-price-max').textContent = p.maxPrice ? 'R$ '+p.maxPrice.toLocaleString('pt-BR') : '–';
+  document.getElementById('res-phase-label').textContent = (p.phaseLabel||'') + ' · ' + (p.solutionLabel||'');
+  document.getElementById('res-mult-badge').textContent = '⚙️ Multiplicador total: ' + (p.total||1).toFixed(2) + '×';
+
+  if (p.team) document.getElementById('res-team').innerHTML = p.team.map(t=>`<span class="team-chip">${t}</span>`).join('');
+
+  if (p.multValues) {
+    document.getElementById('res-multipliers').innerHTML = Object.entries(p.multValues).map(([key,val])=>{
+      const pct=((val-1)*100), col=val>1.5?'var(--rose-l)':val>1.2?'var(--amber-l)':val<1?'var(--green-l)':'var(--primary-l)';
+      const bar=Math.min(100,Math.abs((val-0.5)/1.5)*100), sign=pct>=0?'+':'';
+      return `<div class="mult-row"><span class="mult-name">📍 ${MULT_LABELS[key]}</span><div class="mult-bar-wrap"><div class="mult-bar" style="width:${bar}%;background:${col}"></div></div><span class="mult-val" style="color:${col}">${val.toFixed(2)}× <small style="font-weight:400;font-size:.72rem;color:var(--dim)">${sign}${pct.toFixed(0)}%</small></span></div>`;
+    }).join('');
+  }
+
+  if (p.alerts) {
+    const alertsHtml = p.alerts.length
+      ? p.alerts.map(a=>`<div class="alert alert-${a.type}"><span class="alert-icon">${a.icon}</span><div class="alert-body"><div class="alert-title">${a.title}</div>${a.msg}</div></div>`).join('')
+      : '<div style="font-size:.82rem;color:var(--dim);padding:.5rem 0">Nenhum alerta identificado.</div>';
+    document.getElementById('res-alerts').innerHTML = alertsHtml;
+  }
+
+  // timeline
+  if (p.tl) {
+    document.getElementById('res-timeline').innerHTML = `
+      <div class="timeline-row"><span class="timeline-label">Duração estimada</span><span class="timeline-value">${p.tl}</span></div>
+      <div class="timeline-row"><span class="timeline-label">Fase</span><span class="timeline-value">${p.phaseLabel||''}</span></div>
+      <div class="timeline-row"><span class="timeline-label">Tecnologia</span><span class="timeline-value">${p.solutionLabel||''}</span></div>`;
+  }
+
+  // matrix
+  const score = +document.getElementById('sc-total').textContent || 0;
+  const pct = ((score-10)/40)*100;
+  document.getElementById('res-score').textContent = score;
+  document.getElementById('res-score-bar').style.width = pct + '%';
+  const vEl = document.getElementById('res-verdict');
+  if (score>=35){ vEl.className='verdict-box verdict-go'; vEl.textContent='✅ Aprovar'; document.getElementById('res-score-bar').style.background='var(--green)'; document.getElementById('res-score').style.color='var(--green-l)'; }
+  else if(score>=25){ vEl.className='verdict-box verdict-piloto'; vEl.textContent='🧪 Piloto'; document.getElementById('res-score-bar').style.background='var(--amber)'; document.getElementById('res-score').style.color='var(--amber-l)'; }
+  else{ vEl.className='verdict-box verdict-nogo'; vEl.textContent='❌ Reprovar'; document.getElementById('res-score-bar').style.background='var(--rose)'; document.getElementById('res-score').style.color='var(--rose-l)'; }
+
+  // matrix breakdown
+  const matLabels = { impacto:'💰 Impacto Financeiro', eficiencia:'⚙️ Ganho Operacional', viabilidad:'🔧 Facilidade Técnica', dados:'🗄️ Prontidão de Dados', risco:'🛡️ Risco (inv.)' };
+  let mbHtml = '';
+  for (const [k,w] of Object.entries(WEIGHTS)) {
+    const v = +document.getElementById('sc-'+k)?.value||0;
+    const contrib = v*w;
+    const barPct = (contrib/(5*w))*100;
+    mbHtml += `<div class="mult-row"><span class="mult-name">${matLabels[k]} <small style="color:var(--dim)">×${w}</small></span><div class="mult-bar-wrap"><div class="mult-bar" style="width:${barPct}%;background:var(--primary)"></div></div><span class="mult-val" style="color:var(--primary-l)">${contrib} pts</span></div>`;
+  }
+  document.getElementById('res-matrix-breakdown').innerHTML = mbHtml;
+
+  // matrix radar
+  if (matrixChartInst) matrixChartInst.destroy();
+  const mc = document.getElementById('matrixChart')?.getContext('2d');
+  if (mc) {
+    matrixChartInst = new Chart(mc, {
+      type:'radar',
+      data:{
+        labels:['Impacto\nFinanceiro','Ganho\nOperacional','Facilidade\nTécnica','Prontidão\ndos Dados','Risco\n(inv.)'],
+        datasets:[{
+          label:'Score',
+          data: Object.keys(WEIGHTS).map(k=>+document.getElementById('sc-'+k)?.value||0),
+          backgroundColor:'rgba(16,185,129,.15)',borderColor:'rgba(16,185,129,.8)',
+          pointBackgroundColor:'rgba(52,211,153,1)',borderWidth:2,pointRadius:4
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        scales:{r:{min:0,max:5,ticks:{display:false},grid:{color:'rgba(71,85,105,.4)'},angleLines:{color:'rgba(71,85,105,.4)'},pointLabels:{color:'#94a3b8',font:{size:10}}}},
+        plugins:{legend:{display:false}}
+      }
+    });
+  }
+
+  // ROI final
+  const fmtPct = v => isFinite(v) ? v.toFixed(0)+'%' : '—';
+  const fmtMes = v => isFinite(v) ? v.toFixed(1)+' meses' : '∞';
+  const fmtRS  = v => 'R$ '+Math.round(v).toLocaleString('pt-BR');
+  const colorFn= (v,g,w)=> v>=g?'var(--green-l)':v>=w?'var(--amber-l)':'var(--rose-l)';
+  const setR = (id,txt,col)=>{ const el=document.getElementById(id); if(el){el.textContent=txt;el.style.color=col;} };
+
+  if (r.B !== undefined) {
+    document.getElementById('res-horizon-label').textContent = r.H;
+    setR('res-roi1', fmtPct(r.roi1),   colorFn(r.roi1,50,0));
+    setR('res-roih', fmtPct(r.roiH),   colorFn(r.roiH,100,0));
+    setR('res-pay',  fmtMes(r.payback), r.payback<=12?'var(--green-l)':r.payback<=18?'var(--amber-l)':'var(--rose-l)');
+    setR('res-net',  fmtRS(r.ganho),    r.ganho>=0?'var(--green-l)':'var(--rose-l)');
+
+    const labels2 = Array.from({length:r.H+1},(_,i)=>'Ano '+i);
+    const costs2  = Array.from({length:r.H+1},(_,i)=> i===0?r.C0:r.C0+r.Cr*i);
+    const bens2   = Array.from({length:r.H+1},(_,i)=> r.B*i);
+    if (roiChartFinalInst) roiChartFinalInst.destroy();
+    const rc = document.getElementById('roiChartFinal')?.getContext('2d');
+    if (rc) {
+      roiChartFinalInst = new Chart(rc, {
+        data:{ labels:labels2, datasets:[
+          { type:'bar',  label:'Custo Acumulado', data:costs2, backgroundColor:'rgba(244,63,94,.4)', borderColor:'rgba(244,63,94,.8)', borderWidth:1 },
+          { type:'line', label:'Benefício Acumulado', data:bens2, borderColor:'rgba(16,185,129,.9)', backgroundColor:'rgba(16,185,129,.1)', borderWidth:2, fill:true, tension:.3, pointRadius:4 }
+        ]},
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},
+          scales:{
+            x:{ticks:{color:'#64748b'},grid:{color:'rgba(71,85,105,.3)'}},
+            y:{ticks:{color:'#64748b',callback:v=>'R$'+v.toLocaleString('pt-BR')},grid:{color:'rgba(71,85,105,.3)'}}
+          }
+        }
+      });
+    }
+  } else {
+    ['res-roi1','res-roih','res-pay','res-net'].forEach(id=>{ const el=document.getElementById(id); if(el){el.textContent='—';el.style.color='var(--dim)';} });
+  }
+
+  // date on ficha
+  document.getElementById('f-data').value = new Date().toLocaleDateString('pt-BR');
+
+  // radar (complexity)
+  if (radarChartInstance) radarChartInstance.destroy();
+  const rctx = document.getElementById('radarChart')?.getContext('2d');
+  if (rctx) {
+    radarChartInstance = new Chart(rctx, {
+      type:'radar',
+      data:{
+        labels:['Regulação','Complexidade\nTécnica','Volume\nde Dados','Integrações','Criticidade','Urgência','Governance'],
+        datasets:[{
+          label:'Complexidade',
+          data:[
+            ({none:1,basic:2,high:4,max:5}[state.regulation]||1),
+            ({none:1,lora:3,full:5}[state.fineTuning]||1),
+            ({none:1,small:2,medium:3,big:5}[state.dataVolume]||1),
+            ({none:1,low:2,medium:3,high:5}[state.integrations]||1),
+            ({low:1,medium:2,high:3,mission:5}[state.criticality]||1),
+            ({normal:1,urgent:3,critical:5}[state.urgency]||1),
+            ({none:1,basic:2,full:4}[state.governance]||1)
+          ],
+          backgroundColor:'rgba(99,102,241,.18)',borderColor:'rgba(99,102,241,.8)',
+          pointBackgroundColor:'rgba(129,140,248,1)',borderWidth:2,pointRadius:4
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        scales:{r:{min:0,max:5,ticks:{display:false},grid:{color:'rgba(71,85,105,.4)'},angleLines:{color:'rgba(71,85,105,.4)'},pointLabels:{color:'#94a3b8',font:{size:11}}}},
+        plugins:{legend:{display:false}}
+      }
+    });
+  }
+
+  goToStep(7);
+}
+
+// ══════════════════════════════════════════════════
+//  COPY FICHA
+// ══════════════════════════════════════════════════
+function copiarFicha() {
+  const p = window._pricing || {};
+  const r = window._roi || {};
+  const score = document.getElementById('sc-total')?.textContent || '–';
+  const v = id => document.getElementById(id)?.value?.trim() || '—';
+  const fmtPct = v => isFinite(v) ? v.toFixed(0)+'%' : '—';
+  const fmtMes = v => isFinite(v) ? v.toFixed(1)+' meses' : '∞';
+  const fmtRS  = v => 'R$ '+Math.round(v).toLocaleString('pt-BR');
+
+  const txt = [
+    '=== FICHA DE AVALIAÇÃO · PrecifAI — Hcode ===',
+    `Projeto: ${v('f-nome')}`,
+    `Sponsor: ${v('f-sponsor')}`,
+    `Problema: ${v('f-problema')}`,
+    `KPI: ${v('f-kpi')}`,
+    '',
+    '── Precificação ──',
+    `Faixa: ${p.minPrice?'R$ '+p.minPrice.toLocaleString('pt-BR'):'–'} — ${p.maxPrice?'R$ '+p.maxPrice.toLocaleString('pt-BR'):'–'}`,
+    `Fase: ${p.phaseLabel||'–'} · Tecnologia: ${p.solutionLabel||'–'}`,
+    `Multiplicador total: ${(p.total||1).toFixed(2)}×`,
+    '',
+    '── Matriz de Priorização ──',
+    `Score: ${score} / 50`,
+    `Veredicto: ${document.getElementById('res-verdict')?.textContent||'–'}`,
+    '',
+    '── ROI & Payback ──',
+    `ROI Ano 1: ${r.roi1!==undefined?fmtPct(r.roi1):'–'}`,
+    `ROI ${r.H||3} anos: ${r.roiH!==undefined?fmtPct(r.roiH):'–'}`,
+    `Payback: ${r.payback!==undefined?fmtMes(r.payback):'–'}`,
+    `Ganho Líquido: ${r.ganho!==undefined?fmtRS(r.ganho):'–'}`,
+    '',
+    `Data: ${new Date().toLocaleDateString('pt-BR')}`,
+    '=== FIM ==='
+  ].join('\n');
+
+  navigator.clipboard.writeText(txt).then(() => {
+    alert('Ficha copiada! Cole no e-mail ou apresentação.');
+  }).catch(() => { alert('Não foi possível copiar automaticamente.'); });
 }
 
 // ══════════════════════════════════════════════════
@@ -1558,7 +2314,7 @@ function goToStep(n) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function nextStep() { if (currentStep < 5) goToStep(currentStep + 1); }
+function nextStep() { if (currentStep < 7) goToStep(currentStep + 1); }
 function prevStep() { if (currentStep > 1) goToStep(currentStep - 1); }
 
 // ══════════════════════════════════════════════════
@@ -1568,12 +2324,38 @@ document.querySelectorAll('.opt-card').forEach(card => {
   card.addEventListener('click', () => {
     const field = card.dataset.field;
     const value = card.dataset.value;
-    // Deselect siblings
     document.querySelectorAll(`.opt-card[data-field="${field}"]`).forEach(c => c.classList.remove('selected'));
     card.classList.add('selected');
     state[field] = value;
   });
 });
+
+// Override calculate() to also pre-fill ROI setup cost
+const _origCalc = calculate;
+function calculate() {
+  _origCalc();
+  // Pre-fill setup cost with pricing min estimate
+  const p = window._pricing;
+  if (p && p.minPrice) {
+    const c0El = document.getElementById('roi-c0');
+    if (c0El && (+c0El.value === 0 || !c0El._userEdited)) {
+      c0El.value = p.minPrice;
+      // Estimate recurring at 25% of setup
+      const crEl = document.getElementById('roi-cr');
+      if (crEl && (+crEl.value === 0 || !crEl._userEdited)) {
+        crEl.value = Math.round(p.minPrice * 0.25 / 1000) * 1000;
+      }
+      recalcROI();
+    }
+  }
+}
+['roi-c0','roi-cr','roi-b','roi-h'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', () => { el._userEdited = true; });
+});
+
+// Initialize matrix display
+recalcMatrix();
 </script>
 </body>
 </html>
